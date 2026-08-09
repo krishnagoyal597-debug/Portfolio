@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfolio Admin — Mission Control Dashboard</title>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Admin Theme CSS -->
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+
+  <!-- Cropper.js CDN for Image Zooming, Panning & Cropping -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+  <!-- Supabase JS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+
+<body class="admin-body">
+
+  <!-- 1. ADMIN LOGIN SCREEN -->
+  <div id="login-screen" class="admin-login-wrapper">
+    <div class="admin-login-card">
+      <h2 class="admin-login-title">Admin Dashboard</h2>
+      <p class="admin-login-sub">Sign in to manage your portfolio content.</p>
+      <form onsubmit="handleAdminLogin(event)">
+        <div class="form-group">
+          <label for="admin-password">PASSWORD</label>
+          <input type="password" id="admin-password" class="form-control" placeholder="Enter admin password" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Authenticate →</button>
+        <div id="login-status" style="color: var(--danger); font-size: 0.85rem; margin-top: 12px; text-align: center;">
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. MAIN DASHBOARD LAYOUT -->
+  <div id="dashboard-screen" class="dashboard-container" style="display: none;">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="admin-sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-brand">Krishna<span>.</span></div>
+        <div class="sidebar-sub">Portfolio Admin</div>
+      </div>
+
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-item"><button class="active" data-tab="overview">📊 Overview</button></li>
+        <li class="sidebar-nav-item"><button data-tab="profile">👤 Profile &amp; Bio</button></li>
+        <li class="sidebar-nav-item"><button data-tab="projects">💻 Projects</button></li>
+        <li class="sidebar-nav-item"><button data-tab="skills">🪐 Skills Matrix</button></li>
+        <li class="sidebar-nav-item"><button data-tab="certifications">📜 Certifications</button></li>
+        <li class="sidebar-nav-item"><button data-tab="achievements">🏆 Achievements</button></li>
+        <li class="sidebar-nav-item"><button data-tab="experience">🚀 Experience</button></li>
+        <li class="sidebar-nav-item"><button data-tab="links">🔗 Links &amp; Meta</button></li>
+        <li class="sidebar-nav-item"><button data-tab="messages">📥 Messages</button></li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <button class="btn btn-secondary" onclick="triggerRegenerate()" style="font-size: 0.8rem; padding: 8px 12px;">✨
+          Regenerate Portfolio</button>
+        <button class="btn btn-outline" onclick="handleAdminLogout()"
+          style="font-size: 0.8rem; color: var(--danger); border-color: var(--danger); padding: 8px 12px;">🚪
+          Logout</button>
+        <div id="admin-regen-status" style="font-size: 0.75rem; color: var(--admin-primary); text-align: center;"></div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="admin-main">
+      <div class="admin-header-bar">
+        <div>
+          <h1 class="admin-page-title">Mission Control Dashboard</h1>
+          <p style="font-size: 0.88rem; color: var(--admin-text-muted);">Manage Supabase Telemetry Data &amp; AI
+            Portfolio Sync</p>
+        </div>
+        <div>
+          <a href="index.html" target="_blank" class="btn btn-outline" style="font-size: 0.85rem;">View Live Website
+            ↗</a>
+        </div>
+      </div>
+
+      <div id="admin-tab-content">
+        <!-- Rendered dynamically by dashboard.js -->
+      </div>
+    </main>
+
+  </div>
+
+  <!-- 3. MODAL DIALOGS FOR ADDING CONTENT WITH FILE SELECTION FROM COMPUTER -->
+
+  <!-- A. ADD CERTIFICATE MODAL -->
+  <div class="admin-modal-overlay" id="modal-cert-overlay">
+    <div class="admin-modal-card">
+      <button class="admin-modal-close" onclick="closeAdminModal('modal-cert-overlay')">&times;</button>
+      <h3 class="admin-modal-title">📜 Add New Certification</h3>
+      <form onsubmit="submitCertForm(event)">
+        <div class="form-group">
+          <label>Certification Title</label>
+          <input type="text" id="cert-title" class="form-control" placeholder="e.g. Deep Learning Specialization"
+            required>
+        </div>
+        <div class="form-group">
+          <label>Platform / Issuer</label>
+          <input type="text" id="cert-platform" class="form-control" placeholder="e.g. Coursera / DeepLearning.AI"
+            required>
+        </div>
+        <div class="form-group">
+          <label>Date Earned</label>
+          <input type="date" id="cert-date" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label>Certificate Verification URL (Optional)</label>
+          <input type="url" id="cert-url" class="form-control" placeholder="https://coursera.org/verify/..." value="#">
+        </div>
+        <div class="form-group">
+          <label>Select Certificate Photo / PDF / Graphic from Computer:</label>
+          <div class="file-upload-box">
+            <input type="file" id="cert-file" onchange="handleModalFileUpload(this, 'cert-img-url', 'cert-upload-status')">
+            <input type="hidden" id="cert-img-url" value="assets/images/cert-ml.svg">
+            <div id="cert-upload-status" style="font-size: 0.8rem; color: var(--admin-primary); margin-top: 6px;">Choose a PDF or Image file from Finder/PC</div>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 16px;">Save Certification →</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- B. ADD PROJECT MODAL -->
+  <div class="admin-modal-overlay" id="modal-project-overlay">
+    <div class="admin-modal-card">
+      <button class="admin-modal-close" onclick="closeAdminModal('modal-project-overlay')">&times;</button>
+      <h3 class="admin-modal-title">💻 Add New Project</h3>
+      <form onsubmit="submitProjectForm(event)">
+        <div class="form-group">
+          <label>Project Title</label>
+          <input type="text" id="proj-title" class="form-control" placeholder="e.g. Neural Telemetry Analyzer" required>
+        </div>
+        <div class="form-group">
+          <label>Short Description</label>
+          <textarea id="proj-desc" class="form-control" rows="3" placeholder="Describe the project goals and features..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Tech Stack (Comma Separated)</label>
+          <input type="text" id="proj-stack" class="form-control" placeholder="Python, PyTorch, Pandas, Flask" required>
+        </div>
+        <div class="form-group">
+          <label>GitHub Repository URL</label>
+          <input type="url" id="proj-github" class="form-control" placeholder="https://github.com/krishnagoyal597/..." value="https://github.com/krishnagoyal597">
+        </div>
+        <div class="form-group">
+          <label>Live Demo URL</label>
+          <input type="url" id="proj-demo" class="form-control" placeholder="https://demo.example.com" value="https://demo.example.com">
+        </div>
+        <div class="form-group">
+          <label>Select Project Screenshot / PDF / Graphic from Computer:</label>
+          <div class="file-upload-box">
+            <input type="file" id="proj-file" onchange="handleModalFileUpload(this, 'proj-img-url', 'proj-upload-status')">
+            <input type="hidden" id="proj-img-url" value="">
+            <div id="proj-upload-status" style="font-size: 0.8rem; color: var(--admin-primary); margin-top: 6px;">Choose a PDF or Image file from Finder/PC</div>
+          </div>
+        </div>
+        <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+          <input type="checkbox" id="proj-featured" checked>
+          <label for="proj-featured" style="margin: 0; cursor: pointer;">Feature on homepage spotlight</label>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 16px;">Save Project →</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- C. ADD ACHIEVEMENT MODAL -->
+  <div class="admin-modal-overlay" id="modal-achievement-overlay">
+    <div class="admin-modal-card">
+      <button class="admin-modal-close" onclick="closeAdminModal('modal-achievement-overlay')">&times;</button>
+      <h3 class="admin-modal-title">🏆 Add Achievement / Activity</h3>
+      <form onsubmit="submitAchievementForm(event)">
+        <div class="form-group">
+          <label>Title</label>
+          <input type="text" id="ach-title" class="form-control" placeholder="e.g. National AI Hackathon Top 10" required>
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select id="ach-category" class="form-control">
+            <option value="Competition">Competition / Hackathon</option>
+            <option value="Academic">Academic Honor</option>
+            <option value="Extracurricular">Extracurricular Initiative</option>
+            <option value="Leadership">Leadership &amp; Community</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Date Achieved</label>
+          <input type="date" id="ach-date" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="ach-desc" class="form-control" rows="3" placeholder="Details about the award or activity..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Select Photo / PDF / Award Graphic from Computer:</label>
+          <div class="file-upload-box">
+            <input type="file" id="ach-file" onchange="handleModalFileUpload(this, 'ach-img-url', 'ach-upload-status')">
+            <input type="hidden" id="ach-img-url" value="assets/images/cert-ml.svg">
+            <div id="ach-upload-status" style="font-size: 0.8rem; color: var(--admin-primary); margin-top: 6px;">Choose a PDF or Image file from Finder/PC</div>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 16px;">Save Achievement →</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- D. ADD SKILL MODAL -->
+  <div class="admin-modal-overlay" id="modal-skill-overlay">
+    <div class="admin-modal-card">
+      <button class="admin-modal-close" onclick="closeAdminModal('modal-skill-overlay')">&times;</button>
+      <h3 class="admin-modal-title">🪐 Add Technical Skill</h3>
+      <form onsubmit="submitSkillForm(event)">
+        <div class="form-group">
+          <label>Skill Name</label>
+          <input type="text" id="skill-name" class="form-control" placeholder="e.g. PyTorch, PostgreSQL" required>
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select id="skill-category" class="form-control">
+            <option value="Programming">Programming</option>
+            <option value="AI/ML">AI / Machine Learning</option>
+            <option value="Databases">Databases</option>
+            <option value="Web">Web Development</option>
+            <option value="Tools">Development Tools</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 16px;">Save Skill →</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- E. ADD EXPERIENCE MODAL -->
+  <div class="admin-modal-overlay" id="modal-experience-overlay">
+    <div class="admin-modal-card">
+      <button class="admin-modal-close" onclick="closeAdminModal('modal-experience-overlay')">&times;</button>
+      <h3 class="admin-modal-title">🚀 Add Experience / Role</h3>
+      <form onsubmit="submitExperienceForm(event)">
+        <div class="form-group">
+          <label>Organization / Company Name</label>
+          <input type="text" id="exp-company" class="form-control" placeholder="e.g. GLA University AI Lab" required>
+        </div>
+        <div class="form-group">
+          <label>Role Title</label>
+          <input type="text" id="exp-role" class="form-control" placeholder="e.g. Student AI Researcher" required>
+        </div>
+        <div class="form-group">
+          <label>Start Date</label>
+          <input type="date" id="exp-start" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label>End Date (Leave blank if currently ongoing)</label>
+          <input type="date" id="exp-end" class="form-control">
+        </div>
+        <div class="form-group">
+          <label>Bullet Highlights (Separate with semicolons ;)</label>
+          <textarea id="exp-bullets" class="form-control" rows="3"
+            placeholder="Developing PyTorch algorithms; Analyzing telemetry data" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 16px;">Save Experience →</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- F. CROP PROFILE PHOTO MODAL -->
+  <div class="admin-modal-overlay" id="modal-crop-overlay">
+    <div class="admin-modal-card" style="max-width: 580px; text-align: center;">
+      <button class="admin-modal-close" onclick="closeCropModal()">&times;</button>
+      <h3 class="admin-modal-title">🖼️ Adjust &amp; Crop Profile Photo</h3>
+      <p style="font-size: 0.85rem; color: var(--admin-text-muted); margin-bottom: 16px;">
+        Drag photo to pan/move. Use controls or scroll wheel to zoom in &amp; out for the perfect fit!
+      </p>
+
+      <!-- Cropper Image Container -->
+      <div style="width: 100%; height: 320px; background: #111827; border-radius: 12px; overflow: hidden; margin-bottom: 16px;">
+        <img id="crop-image-target" style="max-width: 100%; display: block;">
+      </div>
+
+      <!-- Controls Toolbar -->
+      <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 20px; background: #F3F4F6; padding: 12px; border-radius: 8px;">
+        <button class="btn btn-secondary" type="button" onclick="zoomCrop(-0.1)" style="font-size: 0.82rem; padding: 6px 12px;">🔍- Zoom Out</button>
+        <button class="btn btn-secondary" type="button" onclick="zoomCrop(0.1)" style="font-size: 0.82rem; padding: 6px 12px;">🔍+ Zoom In</button>
+        <button class="btn btn-secondary" type="button" onclick="rotateCrop(-90)" style="font-size: 0.82rem; padding: 6px 12px;">🔄 Left</button>
+        <button class="btn btn-secondary" type="button" onclick="rotateCrop(90)" style="font-size: 0.82rem; padding: 6px 12px;">🔄 Right</button>
+        <button class="btn btn-secondary" type="button" onclick="resetCrop()" style="font-size: 0.82rem; padding: 6px 12px;">⏪ Reset</button>
+      </div>
+
+      <div style="display: flex; gap: 12px; justify-content: flex-end;">
+        <button class="btn btn-outline" type="button" onclick="closeCropModal()">Cancel</button>
+        <button class="btn btn-primary" type="button" onclick="saveCroppedProfilePhoto()">✓ Crop &amp; Set Profile Photo →</button>
+      </div>
+      <div id="crop-upload-status" style="font-size: 0.8rem; color: var(--admin-primary); margin-top: 10px;"></div>
+    </div>
+  </div>
+
+  <!-- JavaScript Modules -->
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/dashboard.js"></script>
+</body>
+
+</html>

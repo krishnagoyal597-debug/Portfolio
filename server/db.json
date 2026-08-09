@@ -1,0 +1,138 @@
+{
+  "projects": [
+    {
+      "id": "proj-1",
+      "title": "Neural Telemetry Analyzer",
+      "description": "Deep learning system for real-time sensor anomaly detection using PyTorch.",
+      "tech_stack": [
+        "Python",
+        "PyTorch",
+        "Pandas",
+        "Scikit-Learn"
+      ],
+      "github_url": "https://github.com/krishnagoyal597/neural-telemetry",
+      "live_url": "https://neural-telemetry-demo.vercel.app",
+      "featured": true,
+      "created_at": "2026-01-15T00:00:00Z",
+      "ai_summary": "Deep learning system for real-time sensor anomaly detection using PyTorch."
+    },
+    {
+      "id": "proj-2",
+      "title": "Autonomous Data Pipeline",
+      "description": "ETL pipeline automating large scale data extraction and classification.",
+      "tech_stack": [
+        "Python",
+        "SQL",
+        "Flask",
+        "Supabase"
+      ],
+      "github_url": "https://github.com/krishnagoyal597/data-pipeline",
+      "live_url": "https://data-pipeline-demo.vercel.app",
+      "featured": true,
+      "created_at": "2026-02-10T00:00:00Z",
+      "ai_summary": "ETL pipeline automating large scale data extraction and classification."
+    }
+  ],
+  "skills": [
+    {
+      "id": "sk-1",
+      "name": "Python",
+      "category": "Programming",
+      "proficiency": 92
+    },
+    {
+      "id": "sk-2",
+      "name": "Machine Learning",
+      "category": "AI/ML",
+      "proficiency": 88
+    },
+    {
+      "id": "sk-3",
+      "name": "Data Analytics",
+      "category": "Databases",
+      "proficiency": 90
+    },
+    {
+      "id": "sk-4",
+      "name": "SQL & PostgreSQL",
+      "category": "Databases",
+      "proficiency": 85
+    },
+    {
+      "id": "sk-5",
+      "name": "Flask & Web APIs",
+      "category": "Web",
+      "proficiency": 82
+    }
+  ],
+  "certifications": [
+    {
+      "id": "cert-1",
+      "name": "Machine Learning Specialization",
+      "platform": "Coursera / DeepLearning.AI",
+      "date_earned": "2025-11-20",
+      "certificate_url": "#",
+      "image_url": "assets/images/cert-ml.svg"
+    },
+    {
+      "id": "cert-2",
+      "name": "Python for Data Science & AI",
+      "platform": "IBM / DataCamp",
+      "date_earned": "2025-08-14",
+      "certificate_url": "#",
+      "image_url": "assets/images/cert-python.svg"
+    },
+    {
+      "id": "item-3",
+      "name": "azure",
+      "platform": "microsoft",
+      "date_earned": "2026-08-09",
+      "certificate_url": "#",
+      "image_url": "assets/uploads/upload_1786249435_Screenshot_2026-08-09_at_9.12.46\u202fAM.png"
+    }
+  ],
+  "experience": [
+    {
+      "id": "exp-1",
+      "company": "GLA University AI Lab",
+      "role": "Student AI Researcher",
+      "start_date": "2025-09-01",
+      "end_date": null,
+      "is_current": true,
+      "description": [
+        "Developing predictive data models using Python.",
+        "Collaborating on machine learning benchmarking."
+      ]
+    }
+  ],
+  "achievements": [
+    {
+      "id": "ach-1",
+      "title": "National AI Hackathon Top 10 Finalist",
+      "category": "Competition",
+      "date_achieved": "2025-10-15",
+      "description": "Developed an autonomous real-time anomaly detection pipeline using PyTorch.",
+      "image_url": "assets/images/cert-ml.svg"
+    },
+    {
+      "id": "ach-2",
+      "title": "GLA University Academic Excellence Award",
+      "category": "Academic",
+      "date_achieved": "2025-12-01",
+      "description": "Recognized for top percentile performance in AI & Data Analytics coursework.",
+      "image_url": "assets/images/cert-python.svg"
+    }
+  ],
+  "links": {
+    "github": "https://github.com/krishnagoyal597-debug",
+    "linkedin": "https://www.linkedin.com/in/krishnagoyal597/",
+    "twitter": "https://twitter.com/krishnagoyal",
+    "resume_url": "assets/uploads/upload_1786249530_KrishnaGoyal_InternshalaResume.pdf"
+  },
+  "meta": {
+    "tagline": "AI & Data Analytics Student | Builder | Learner @ GLA University",
+    "bio": "I am Krishna, a first-year B.Tech student specializing in Artificial Intelligence & Data Analytics at GLA University. I am passionate about building intelligent systems and solving real-world problems with data.",
+    "resume_summary": "> Name: Krishna\n> Degree: B.Tech AI & Data Analytics\n> University: GLA University\n> Status: First Year | Class of 2028\n> Skills: Python, ML, Data Analytics, SQL, Linear Algebra\n> Open To: Internships \u2713",
+    "profile_photo_url": "assets/uploads/upload_1786254935_profile_crop_IMG_20251115_165937.jpg"
+  }
+}

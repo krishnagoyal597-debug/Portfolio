@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Krishna Goyal — B.Tech AI & Data Analytics Student | GLA University</title>
+  <meta name="description"
+    content="Personal portfolio of Krishna Goyal, a first-year B.Tech AI & Data Analytics student at GLA University. Built with Python, Supabase, Google Gemini API.">
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+
+  <!-- Main Light Theme CSS -->
+  <link rel="stylesheet" href="assets/css/style.css">
+
+  <!-- Supabase JS Client via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+
+<body>
+
+  <!-- 1. NAVBAR -->
+  <nav class="navbar">
+    <div class="container nav-container">
+      <a href="#home" class="nav-logo">Krishna<span>.</span></a>
+      <ul class="nav-links">
+        <li><a href="#home" class="nav-link active">Home</a></li>
+        <li><a href="#about" class="nav-link">About</a></li>
+        <li><a href="#skills" class="nav-link">Skills</a></li>
+        <li><a href="#projects" class="nav-link">Projects</a></li>
+        <li><a href="#experience" class="nav-link">Experience</a></li>
+        <li><a href="#certifications" class="nav-link">Certifications</a></li>
+        <li><a href="#achievements" class="nav-link">Achievements</a></li>
+        <li><a href="#resume" class="nav-link">Resume</a></li>
+        <li><a href="#contact" class="nav-link">Contact</a></li>
+      </ul>
+      <button class="nav-toggle" aria-label="Toggle navigation">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- 2. HOME / HERO -->
+  <section id="home" class="hero-section">
+    <div class="container hero-grid">
+      <div class="hero-content">
+        <span class="section-eyebrow">B.Tech AI & Data Analytics Student</span>
+        <h1 class="hero-title">Hi, I'm Krishna.<br>I build things with AI & data.</h1>
+        <p class="hero-lead">
+          {{ ai.hero_tagline if ai and ai.hero_tagline else meta.tagline }}
+        </p>
+        <div class="hero-buttons">
+          <a href="#projects" class="btn btn-primary">View My Work</a>
+          {% if links and links.resume_url %}
+          <a href="{{ links.resume_url }}" id="btn-download-resume" target="_blank" class="btn btn-secondary">Download
+            Resume</a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="hero-image-container">
+        <div class="hero-image-frame">
+          <img id="hero-profile-img"
+            src="{{ meta.profile_photo_url if meta and meta.profile_photo_url else 'assets/images/profile.svg' }}"
+            alt="Krishna Goyal - AI & Data Analytics Student">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. TICKER DIVIDER 1 -->
+  <div class="ticker-wrap">
+    <div class="ticker">
+      <div class="ticker-item">AI & DATA ANALYTICS <span>•</span> PYTHON <span>•</span> MACHINE LEARNING <span>•</span>
+        SQL <span>•</span> GLA UNIVERSITY <span>•</span> OPEN TO INTERNSHIPS <span>•</span> BUILDER <span>•</span>
+        LEARNER</div>
+      <div class="ticker-item">AI & DATA ANALYTICS <span>•</span> PYTHON <span>•</span> MACHINE LEARNING <span>•</span>
+        SQL <span>•</span> GLA UNIVERSITY <span>•</span> OPEN TO INTERNSHIPS <span>•</span> BUILDER <span>•</span>
+        LEARNER</div>
+    </div>
+  </div>
+
+  <!-- 4. ABOUT SECTION -->
+  <section id="about" class="section-padding">
+    <div class="container">
+      <div class="about-grid">
+        <div>
+          <div class="about-left-img">
+            <img id="about-profile-img"
+              src="{{ meta.profile_photo_url if meta and meta.profile_photo_url else 'assets/images/profile.svg' }}"
+              alt="Krishna Goyal">
+          </div>
+          <div class="about-meta-cards">
+            <div class="meta-card">
+              <div class="meta-card-label">Institution</div>
+              <div class="meta-card-value">GLA University</div>
+            </div>
+            <div class="meta-card">
+              <div class="meta-card-label">Degree</div>
+              <div class="meta-card-value">B.Tech AI & DA</div>
+            </div>
+            <div class="meta-card">
+              <div class="meta-card-label">Class Of</div>
+              <div class="meta-card-value">2028 (1st Yr)</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <span class="section-eyebrow">ABOUT ME</span>
+          <h2 class="section-title">A student focused on building useful things.</h2>
+          <p id="about-bio-text" class="about-bio-text">
+            {{ ai.bio if ai and ai.bio else meta.bio }}
+          </p>
+
+          <div class="counter-grid">
+            <div class="counter-item reveal">
+              <div class="counter-number" id="count-projects" data-target="{{ projects | length }}">0</div>
+              <div class="counter-label">Projects Built</div>
+            </div>
+            <div class="counter-item reveal">
+              <div class="counter-number" id="count-certs" data-target="{{ certifications | length }}">0</div>
+              <div class="counter-label">Certifications</div>
+            </div>
+            <div class="counter-item reveal">
+              <div class="counter-number" id="count-skills" data-target="{{ skills | length }}">0</div>
+              <div class="counter-label">Technical Skills</div>
+            </div>
+            <div class="counter-item reveal">
+              <div class="counter-number" id="count-repos" data-target="{{ projects | length + 3 }}">0</div>
+              <div class="counter-label">GitHub Repos</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. TICKER DIVIDER 2 -->
+  <div class="ticker-wrap">
+    <div class="ticker">
+      <div class="ticker-item">PROBLEM SOLVING <span>•</span> DATA PIPELINES <span>•</span> PYTORCH <span>•</span>
+        PANDAS <span>•</span> NUMPY <span>•</span> FLASK <span>•</span> POSTGRESQL</div>
+      <div class="ticker-item">PROBLEM SOLVING <span>•</span> DATA PIPELINES <span>•</span> PYTORCH <span>•</span>
+        PANDAS <span>•</span> NUMPY <span>•</span> FLASK <span>•</span> POSTGRESQL</div>
+    </div>
+  </div>
+
+  <!-- 6. SKILLS SECTION -->
+  <section id="skills" class="section-padding bg-secondary">
+    <div class="container">
+      <span class="section-eyebrow">SKILLS</span>
+      <h2 class="section-title">Skills & Technologies</h2>
+      <p class="section-subtitle">
+        {{ ai.skills_intro if ai and ai.skills_intro else 'Core programming languages, frameworks, databases, and
+        development tools I work with.' }}
+      </p>
+
+      <div class="category-tabs">
+        <button class="tab-btn active" data-category="All">All Skills</button>
+        <button class="tab-btn" data-category="Programming">Programming</button>
+        <button class="tab-btn" data-category="AI / ML">AI / ML</button>
+        <button class="tab-btn" data-category="Databases">Databases</button>
+        <button class="tab-btn" data-category="Web">Web</button>
+        <button class="tab-btn" data-category="Tools">Tools</button>
+      </div>
+
+      <div class="skills-layout">
+        <div class="skills-dir-card">
+          <div class="dir-title">Skill Directory</div>
+          <div class="dir-group">
+            <div class="dir-group-title">📁 Programming</div>
+            <ul class="dir-list">
+              <li class="dir-item">• Python</li>
+              <li class="dir-item">• Java</li>
+              <li class="dir-item">• C Programming</li>
+            </ul>
+          </div>
+          <div class="dir-group">
+            <div class="dir-group-title">📁 AI / Data Analytics</div>
+            <ul class="dir-list">
+              <li class="dir-item">• PyTorch</li>
+              <li class="dir-item">• Pandas & NumPy</li>
+              <li class="dir-item">• Scikit-Learn</li>
+            </ul>
+          </div>
+          <div class="dir-group">
+            <div class="dir-group-title">📁 Databases & Web</div>
+            <ul class="dir-list">
+              <li class="dir-item">• SQL / PostgreSQL</li>
+              <li class="dir-item">• Flask Web Framework</li>
+              <li class="dir-item">• HTML5 / CSS3 / JS</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="skills-grid" id="skills-grid-container">
+          {% for skill in skills %}
+          <div class="skill-card reveal active" data-category="{{ skill.category }}">
+            <div class="skill-header" style="margin-bottom: 0;">
+              <span class="skill-name">{{ skill.name }}</span>
+              <span class="mono-chip"
+                style="color: var(--accent); background: var(--accent-light); padding: 2px 10px; border-radius: 6px;">{{
+                skill.category }}</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. TICKER DIVIDER 3 -->
+  <div class="ticker-wrap">
+    <div class="ticker">
+      <div class="ticker-item">FEATURED PROJECTS <span>•</span> TELEMETRY ANALYZER <span>•</span> DATA PIPELINE
+        <span>•</span> PORTFOLIO GENERATOR <span>•</span> OPEN SOURCE</div>
+      <div class="ticker-item">FEATURED PROJECTS <span>•</span> TELEMETRY ANALYZER <span>•</span> DATA PIPELINE
+        <span>•</span> PORTFOLIO GENERATOR <span>•</span> OPEN SOURCE</div>
+    </div>
+  </div>
+
+  <!-- 8. PROJECTS SECTION -->
+  <section id="projects" class="section-padding">
+    <div class="container">
+      <span class="section-eyebrow">PROJECTS</span>
+      <h2 class="section-title">Selected Projects</h2>
+      <p class="section-subtitle">A collection of software applications, data pipelines, and machine learning models
+        I've built.</p>
+
+      <div class="projects-scroll-wrapper">
+        <div class="projects-row" id="projects-row-container">
+          {% for project in projects %}
+          <div class="project-card">
+            {% if project.featured %}<span class="featured-badge">FEATURED</span>{% endif %}
+            <div>
+              <h3 class="project-title">{{ project.title }}</h3>
+              <p class="project-desc">{{ project.ai_summary if project.ai_summary else project.description }}</p>
+            </div>
+            <div>
+              {% if project.tech_stack %}
+              <div class="chip-group">
+                {% for tech in project.tech_stack %}
+                <span class="tech-chip">{{ tech }}</span>
+                {% endfor %}
+              </div>
+              {% endif %}
+              <div class="project-footer-links" style="display: flex; gap: 16px; align-items: center;">
+                {% if project.github_url %}<a href="{{ project.github_url }}" target="_blank"
+                  class="project-link">GitHub →</a>{% endif %}
+                <a href="{{ project.live_url if project.live_url and project.live_url != '#' else 'https://demo.example.com' }}"
+                  target="_blank" class="project-link">Live Demo ↗</a>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROJECT DETAIL MODAL -->
+  <div class="modal-overlay" id="project-modal-overlay">
+    <div class="modal-card">
+      <button class="modal-close" id="modal-close-btn">&times;</button>
+      <div id="modal-project-content"></div>
+    </div>
+  </div>
+
+  <!-- 9. EXPERIENCE SECTION -->
+  <section id="experience" class="section-padding bg-secondary">
+    <div class="container">
+      <span class="section-eyebrow">EXPERIENCE</span>
+      <h2 class="section-title">Where I've Been</h2>
+      <p class="section-subtitle">Academic research, student initiatives, and collaborative projects.</p>
+
+      <div class="timeline" id="timeline-container">
+        {% for exp in experience %}
+        <div class="timeline-item reveal active">
+          <div class="timeline-marker"></div>
+          <div class="timeline-card">
+            <div class="timeline-header">
+              <div>
+                <div class="timeline-role">{{ exp.role }}</div>
+                <div class="timeline-company">{{ exp.company }}</div>
+              </div>
+              <div class="timeline-date">{{ exp.start_date }} — {{ exp.end_date if exp.end_date else 'Present' }}</div>
+            </div>
+            {% if exp.description %}
+            <ul class="timeline-bullets">
+              {% for bullet in exp.description %}
+              <li>{{ bullet }}</li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- 10. CERTIFICATIONS SECTION -->
+  <section id="certifications" class="section-padding">
+    <div class="container">
+      <span class="section-eyebrow">CERTIFICATIONS</span>
+      <h2 class="section-title">What I've Earned</h2>
+      <p class="section-subtitle">Verified professional specialization courses and technical training credentials.</p>
+
+      <div class="certs-grid" id="certs-grid-container">
+        {% for cert in certifications %}
+        <div class="cert-card reveal active">
+          {% if cert.image_url %}
+          <div class="cert-img-frame">
+            <img src="{{ cert.image_url }}" alt="{{ cert.name }}" loading="lazy">
+          </div>
+          {% endif %}
+          <h3 class="cert-title">{{ cert.name }}</h3>
+          <div class="cert-platform">{{ cert.platform }}</div>
+          <div class="cert-date">Earned: {{ cert.date_earned }}</div>
+          <div class="cert-badge">✓ Verified Credential</div>
+          {% if cert.certificate_url and cert.certificate_url != '#' %}
+          <div style="margin-top: 14px;">
+            <a href="{{ cert.certificate_url }}" target="_blank" class="project-link">View Certificate →</a>
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- 11. ACHIEVEMENTS SECTION -->
+  <section id="achievements" class="section-padding bg-secondary">
+    <div class="container">
+      <span class="section-eyebrow">ACHIEVEMENTS</span>
+      <h2 class="section-title">Achievements &amp; Activities</h2>
+      <p class="section-subtitle">Competitions, hackathons, academic honors, and extracurricular initiatives.</p>
+
+      <div class="certs-grid" id="achievements-grid-container">
+        {% for ach in achievements %}
+        <div class="cert-card reveal active">
+          {% if ach.image_url %}
+          <div class="cert-img-frame">
+            <img src="{{ ach.image_url }}" alt="{{ ach.title }}" loading="lazy">
+          </div>
+          {% endif %}
+          <span class="mono-chip"
+            style="color: var(--accent); background: var(--accent-light); padding: 2px 10px; border-radius: 6px; font-size: 0.75rem; display: inline-block; margin-bottom: 8px;">{{
+            ach.category }}</span>
+          <h3 class="cert-title">{{ ach.title }}</h3>
+          <div class="cert-date">Date: {{ ach.date_achieved }}</div>
+          <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 8px;">{{ ach.description }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- 12. TICKER DIVIDER 4 -->
+  <div class="ticker-wrap">
+    <div class="ticker">
+      <div class="ticker-item">GLA UNIVERSITY <span>•</span> B.TECH CLASS OF 2028 <span>•</span> AI & DATA ANALYTICS
+        <span>•</span> GET IN TOUCH</div>
+      <div class="ticker-item">GLA UNIVERSITY <span>•</span> B.TECH CLASS OF 2028 <span>•</span> AI & DATA ANALYTICS
+        <span>•</span> GET IN TOUCH</div>
+    </div>
+  </div>
+
+  <!-- 12. RESUME SECTION -->
+  <section id="resume" class="section-padding bg-secondary">
+    <div class="container">
+      <span class="section-eyebrow">RESUME</span>
+      <h2 class="section-title">Resume Preview</h2>
+
+      <div class="resume-paper-card" id="resume-preview-content">
+        <div class="resume-header">
+          <h2 class="resume-name">Krishna Goyal</h2>
+          <p class="resume-sub">B.Tech AI & Data Analytics Student | GLA University (Class of 2028)</p>
+        </div>
+        <div class="resume-block">
+          <div class="resume-section-title">Education</div>
+          <p><strong>GLA University</strong> — B.Tech in Artificial Intelligence & Data Analytics (1st Year, Expected
+            2028)</p>
+        </div>
+        <div class="resume-block">
+          <div class="resume-section-title">Summary & Specs</div>
+          <p>{{ ai.resume_summary if ai and ai.resume_summary else meta.resume_summary }}</p>
+        </div>
+      </div>
+
+      <div class="resume-actions">
+        {% if links and links.resume_url %}
+        <a href="{{ links.resume_url }}" id="btn-download-resume-bottom" target="_blank"
+          class="btn btn-primary">Download Official Resume (PDF)</a>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  <!-- 13. CONTACT SECTION -->
+  <section id="contact" class="section-padding">
+    <div class="container">
+      <span class="section-eyebrow">CONTACT</span>
+      <h2 class="section-title">Let's work together.</h2>
+      <p class="section-subtitle">
+        {{ ai.contact_tagline if ai and ai.contact_tagline else "Have an opportunity, project idea, or just want to
+        connect? Feel free to reach out." }}
+      </p>
+
+      <div class="contact-grid">
+        <div>
+          <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 12px;">Connect & Reach Out</h3>
+          <p style="color: var(--text-secondary); font-size: 0.95rem;">I am currently seeking summer internship
+            opportunities and open-source data analytics collaborations.</p>
+          <ul class="social-links-list">
+            <li class="social-link-item">
+              <a href="{{ links.github if links and links.github else 'https://github.com/krishnagoyal597' }}"
+                id="link-github" target="_blank">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                </svg>
+                GitHub Profile
+              </a>
+            </li>
+            <li class="social-link-item">
+              <a href="{{ links.linkedin if links and links.linkedin else 'https://linkedin.com/in/krishnagoyal' }}"
+                id="link-linkedin" target="_blank">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+                </svg>
+                LinkedIn Profile
+              </a>
+            </li>
+            <li class="social-link-item">
+              <a href="{{ links.twitter if links and links.twitter else 'https://twitter.com/krishnagoyal' }}"
+                id="link-twitter" target="_blank">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z" />
+                </svg>
+                Twitter / X
+              </a>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <form id="contact-form">
+            <div class="form-group">
+              <label for="contact-name">Name</label>
+              <input type="text" id="contact-name" class="form-control" placeholder="Your Full Name" required>
+            </div>
+            <div class="form-group">
+              <label for="contact-email">Email Address</label>
+              <input type="email" id="contact-email" class="form-control" placeholder="your.email@example.com" required>
+            </div>
+            <div class="form-group">
+              <label for="contact-message">Message</label>
+              <textarea id="contact-message" class="form-control"
+                placeholder="Tell me about your project or opportunity..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Send Message</button>
+            <div id="contact-form-status" class="form-status"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 14. FOOTER -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">Krishna<span>.</span></div>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 8px;">
+            1st Year B.Tech AI & Data Analytics Student @ GLA University.
+          </p>
+        </div>
+        <div>
+          <h4 style="font-size: 0.9rem; font-weight: 700; margin-bottom: 12px;">Quick Links</h4>
+          <ul class="footer-links">
+            <li><a href="#home">Home</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#projects">Projects</a></li>
+            <li><a href="#experience">Experience</a></li>
+            <li><a href="#certifications">Certifications</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 style="font-size: 0.9rem; font-weight: 700; margin-bottom: 12px;">Connect</h4>
+          <ul class="footer-links">
+            <li><a href="https://github.com/krishnagoyal597" target="_blank">GitHub</a></li>
+            <li><a href="https://linkedin.com/in/krishnagoyal" target="_blank">LinkedIn</a></li>
+            <li><a href="/admin" target="_blank">Admin Control</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div>© 2026 Krishna Goyal. All rights reserved.</div>
+        <div>Built with HTML, CSS, JavaScript &amp; Supabase</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- BACK TO TOP BUTTON -->
+  <button class="back-to-top" aria-label="Back to top">↑</button>
+
+  <!-- Main JavaScript Modules -->
+  <script src="assets/js/supabase.js"></script>
+  <script src="assets/js/main.js"></script>
+</body>
+
+</html>

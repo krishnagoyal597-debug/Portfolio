@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 480" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#EFF6FF" />
+      <stop offset="100%" stop-color="#DBEAFE" />
+    </linearGradient>
+    <linearGradient id="avatarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563EB" />
+      <stop offset="100%" stop-color="#1D4ED8" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="400" height="480" fill="url(#bgGrad)" />
+
+  <!-- Geometric Grid Accent -->
+  <circle cx="340" cy="80" r="120" fill="none" stroke="#2563EB" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.2" />
+  <circle cx="60" cy="400" r="80" fill="none" stroke="#2563EB" stroke-width="1.5" opacity="0.2" />
+
+  <!-- Avatar Silhouette / Professional Icon -->
+  <g transform="translate(100, 100)">
+    <circle cx="100" cy="80" r="60" fill="url(#avatarGrad)" />
+    <path d="M 10 240 C 10 170, 50 160, 100 160 C 150 160, 190 170, 190 240 Z" fill="url(#avatarGrad)" />
+  </g>
+
+  <!-- Professional Badge Overlay -->
+  <rect x="40" y="380" width="320" height="60" rx="12" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="1" />
+  <text x="200" y="415" font-family="Inter, sans-serif" font-size="14" font-weight="700" fill="#111827" text-anchor="middle">KRISHNA GOYAL</text>
+  <text x="200" y="432" font-family="Inter, sans-serif" font-size="11" font-weight="500" fill="#6B7280" text-anchor="middle">B.Tech AI &amp; Data Analytics • GLA University</text>
+</svg>
