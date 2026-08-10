@@ -60,6 +60,7 @@
         <li class="sidebar-nav-item"><button data-tab="certifications">📜 Certifications</button></li>
         <li class="sidebar-nav-item"><button data-tab="achievements">🏆 Achievements</button></li>
         <li class="sidebar-nav-item"><button data-tab="experience">🚀 Experience</button></li>
+        <li class="sidebar-nav-item"><button data-tab="academics">🎓 Academic Results</button></li>
         <li class="sidebar-nav-item"><button data-tab="links">🔗 Links &amp; Meta</button></li>
         <li class="sidebar-nav-item"><button data-tab="messages">📥 Messages</button></li>
       </ul>
@@ -270,6 +271,49 @@
             placeholder="Developing PyTorch algorithms; Analyzing telemetry data" required></textarea>
         </div>
         <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 16px;">Save Experience →</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- E. ADD ACADEMIC RECORD MODAL -->
+  <div class="admin-modal-overlay" id="modal-academic-overlay">
+    <div class="admin-modal-card">
+      <button class="admin-modal-close" onclick="closeAdminModal('modal-academic-overlay')">&times;</button>
+      <h3 class="admin-modal-title">🎓 Add Academic Result</h3>
+      <form onsubmit="submitAcademicForm(event)">
+        <div class="form-group">
+          <label>Semester / Term Title</label>
+          <input type="text" id="acad-semester" class="form-control" placeholder="e.g. Semester 3 (Fall 2025)" required>
+        </div>
+        <div class="form-group">
+          <label>Degree / Program</label>
+          <input type="text" id="acad-program" class="form-control" placeholder="e.g. B.Tech AI &amp; Data Analytics" required>
+        </div>
+        <div class="form-group" style="display: flex; gap: 12px;">
+          <div style="flex: 1;">
+            <label>SGPA / CGPA</label>
+            <input type="text" id="acad-score" class="form-control" placeholder="e.g. 9.40 SGPA" required>
+          </div>
+          <div style="flex: 1;">
+            <label>Percentage / Grade</label>
+            <input type="text" id="acad-percentage" class="form-control" placeholder="e.g. 89.5%">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Session / Academic Year</label>
+          <input type="text" id="acad-year" class="form-control" placeholder="e.g. 2025-2026">
+        </div>
+        <div class="form-group">
+          <label>Key Subjects / Course Highlights</label>
+          <input type="text" id="acad-subjects" class="form-control" placeholder="e.g. Machine Learning, Operating Systems, Probability &amp; Stats">
+        </div>
+        <div class="form-group">
+          <label>Upload Marksheet / Certificate (Optional)</label>
+          <input type="file" id="acad-marksheet-file" class="form-control" accept="image/*,.pdf" onchange="uploadAcademicMarksheet()">
+          <input type="hidden" id="acad-marksheet-url">
+          <div id="acad-upload-status" style="font-size: 0.8rem; color: var(--admin-primary); margin-top: 4px;"></div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 16px;">Save Academic Record →</button>
       </form>
     </div>
   </div>

@@ -77,6 +77,8 @@ async function loadTabContent(tab) {
     await loadAchievementsTab();
   } else if (tab === 'experience') {
     await loadExperienceTab();
+  } else if (tab === 'academics') {
+    await loadAcademicsTab();
   } else if (tab === 'links') {
     await loadLinksMetaTab();
   } else if (tab === 'messages') {
@@ -115,11 +117,12 @@ async function uploadImageFile(fileInput, statusId, callback) {
 /* 1. OVERVIEW TAB */
 async function loadOverviewTab() {
   const mainContent = document.getElementById('admin-tab-content');
-  const [projects, skills, certs, achs, msgs] = await Promise.all([
+  const [projects, skills, certs, achs, academics, msgs] = await Promise.all([
     fetchProjects(),
     fetchSkills(),
     fetchCertifications(),
     fetchAchievements(),
+    fetchAcademics(),
     fetchMessages()
   ]);
 
@@ -140,6 +143,10 @@ async function loadOverviewTab() {
       <div class="stat-card">
         <div class="stat-card-title">Achievements</div>
         <div class="stat-card-value">${achs.length}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-title">Academic Results</div>
+        <div class="stat-card-value">${academics.length}</div>
       </div>
       <div class="stat-card">
         <div class="stat-card-title">Messages Received</div>
@@ -894,6 +901,91 @@ async function handleDeleteRow(table, id) {
     } catch (err) {
       alert('Delete failed: ' + err.message);
     }
+  }
+}
+
+/* ACADEMICS TAB */
+async function loadAcademicsTab() {
+  const mainContent = document.getElementById('admin-tab-content');
+  const academics = await fetchAcademics();
+
+  mainContent.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h2 style="font-size: 1.25rem; font-weight: 700;">Academic Results & Marksheets</h2>
+      <button class="btn btn-primary" onclick="openAddAcademicModal()">+ Add Academic Result</button>
+    </div>
+    <div class="table-card">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Semester / Term</th>
+            <th>Program</th>
+            <th>SGPA / CGPA</th>
+            <th>Percentage</th>
+            <th>Key Subjects</th>
+            <th>Marksheet</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${academics.map(a => `
+            <tr>
+              <td><strong>${a.semester}</strong></td>
+              <td>${a.degree_program || 'B.Tech AI & DA'}</td>
+              <td><span class="mono-chip" style="color: var(--admin-primary); font-weight: 700;">${a.sgpa_cgpa}</span></td>
+              <td>${a.percentage || '—'}</td>
+              <td style="max-width: 260px;">${a.subjects || '—'}</td>
+              <td>${a.marksheet_url ? `<a href="${a.marksheet_url}" target="_blank" style="color: var(--admin-primary); font-weight: 600;">View File ↗</a>` : '—'}</td>
+              <td>
+                <button class="btn-sm-action btn-del-sm" onclick="handleDeleteRow('academics', '${a.id}')">Delete</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function openAddAcademicModal() {
+  openAdminModal('modal-academic-overlay');
+}
+
+function uploadAcademicMarksheet() {
+  const fileInput = document.getElementById('acad-marksheet-file');
+  uploadImageFile(fileInput, 'acad-upload-status', (url) => {
+    document.getElementById('acad-marksheet-url').value = url;
+  });
+}
+
+async function submitAcademicForm(e) {
+  e.preventDefault();
+  const semester = document.getElementById('acad-semester').value;
+  const program = document.getElementById('acad-program').value;
+  const score = document.getElementById('acad-score').value;
+  const percentage = document.getElementById('acad-percentage').value;
+  const year = document.getElementById('acad-year').value;
+  const subjects = document.getElementById('acad-subjects').value;
+  const marksheetUrl = document.getElementById('acad-marksheet-url').value;
+
+  const newRecord = {
+    id: 'acad-' + Date.now(),
+    semester: semester,
+    degree_program: program,
+    sgpa_cgpa: score,
+    percentage: percentage,
+    session_year: year,
+    subjects: subjects,
+    marksheet_url: marksheetUrl
+  };
+
+  try {
+    await insertRow('academics', newRecord);
+    closeAdminModal('modal-academic-overlay');
+    loadAcademicsTab();
+    triggerRegenerate();
+  } catch (err) {
+    alert('Failed to save academic result: ' + err.message);
   }
 }
 

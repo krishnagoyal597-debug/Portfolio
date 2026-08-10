@@ -27,10 +27,10 @@ os.makedirs(UPLOADS_FOLDER, exist_ok=True)
 
 app = Flask(__name__, static_folder=STATIC_FOLDER, static_url_path="")
 CORS(app, origins=["*"])
-app.secret_key = os.getenv("FLASK_SECRET_KEY", "flask_secret_krishna_2028")
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "flask_secret_krishna_2029")
 
-ALLOWED_TABLES = ["projects", "skills", "certifications", "experience", "achievements", "messages", "links", "meta"]
-
+ALLOWED_TABLES = ["projects", "skills", "certifications", "experience", "achievements", "academics", "messages", "links", "meta"]
+ 
 
 # ─── FILE UPLOAD API ─────────────────────────────────────
 
@@ -83,6 +83,7 @@ def serve_portfolio():
             certifications=db_data.get("certifications", []),
             experience=db_data.get("experience", []),
             achievements=db_data.get("achievements", []),
+            academics=db_data.get("academics", []),
             links=db_data.get("links", {}),
             meta=db_data.get("meta", {}),
             ai=ai_copy

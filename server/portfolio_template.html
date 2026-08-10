@@ -36,6 +36,7 @@
         <li><a href="#experience" class="nav-link">Experience</a></li>
         <li><a href="#certifications" class="nav-link">Certifications</a></li>
         <li><a href="#achievements" class="nav-link">Achievements</a></li>
+        <li><a href="#academics" class="nav-link">Academics</a></li>
         <li><a href="#resume" class="nav-link">Resume</a></li>
         <li><a href="#contact" class="nav-link">Contact</a></li>
       </ul>
@@ -91,12 +92,13 @@
     <div class="container">
       <div class="about-grid">
         <div>
-          <div class="about-left-img">
-            <img id="about-profile-img"
-              src="{{ meta.profile_photo_url if meta and meta.profile_photo_url else 'assets/images/profile.svg' }}"
-              alt="Krishna Goyal">
-          </div>
-          <div class="about-meta-cards">
+          <span class="section-eyebrow">ABOUT ME</span>
+          <h2 class="section-title">A student focused on building useful things.</h2>
+          <p id="about-bio-text" class="about-bio-text">
+            {{ ai.bio if ai and ai.bio else meta.bio }}
+          </p>
+
+          <div class="about-meta-cards" style="margin-bottom: 32px;">
             <div class="meta-card">
               <div class="meta-card-label">Institution</div>
               <div class="meta-card-value">GLA University</div>
@@ -107,16 +109,9 @@
             </div>
             <div class="meta-card">
               <div class="meta-card-label">Class Of</div>
-              <div class="meta-card-value">2028 (1st Yr)</div>
+              <div class="meta-card-value">2029 (1st Yr)</div>
             </div>
           </div>
-        </div>
-        <div>
-          <span class="section-eyebrow">ABOUT ME</span>
-          <h2 class="section-title">A student focused on building useful things.</h2>
-          <p id="about-bio-text" class="about-bio-text">
-            {{ ai.bio if ai and ai.bio else meta.bio }}
-          </p>
 
           <div class="counter-grid">
             <div class="counter-item reveal">
@@ -219,9 +214,11 @@
   <div class="ticker-wrap">
     <div class="ticker">
       <div class="ticker-item">FEATURED PROJECTS <span>•</span> TELEMETRY ANALYZER <span>•</span> DATA PIPELINE
-        <span>•</span> PORTFOLIO GENERATOR <span>•</span> OPEN SOURCE</div>
+        <span>•</span> PORTFOLIO GENERATOR <span>•</span> OPEN SOURCE
+      </div>
       <div class="ticker-item">FEATURED PROJECTS <span>•</span> TELEMETRY ANALYZER <span>•</span> DATA PIPELINE
-        <span>•</span> PORTFOLIO GENERATOR <span>•</span> OPEN SOURCE</div>
+        <span>•</span> PORTFOLIO GENERATOR <span>•</span> OPEN SOURCE
+      </div>
     </div>
   </div>
 
@@ -362,13 +359,64 @@
     </div>
   </section>
 
+  <!-- 11. ACADEMIC RESULTS SECTION -->
+  <section id="academics" class="section-padding bg-secondary">
+    <div class="container">
+      <span class="section-eyebrow">ACADEMICS</span>
+      <h2 class="section-title">Academic Performance</h2>
+      <p class="section-subtitle">Semester scores, CPI/SGPA, and course records at GLA University.</p>
+
+      <div class="academics-grid" id="academics-grid-container">
+        {% for acad in academics %}
+        <div class="academic-card reveal active">
+          <div>
+            <div class="academic-header">
+              <div>
+                <h3 class="academic-title">{{ acad.semester }}</h3>
+                <div class="academic-program">{{ acad.degree_program if acad.degree_program else 'B.Tech AI & Data Analytics' }}</div>
+              </div>
+              {% if acad.session_year %}
+              <span class="mono-chip" style="color: var(--accent); background: var(--accent-light); padding: 4px 10px; border-radius: 6px; font-size: 0.78rem;">{{ acad.session_year }}</span>
+              {% endif %}
+            </div>
+            
+            <div class="academic-scores">
+              <div class="academic-score-chip">{{ acad.sgpa_cgpa }}</div>
+              {% if acad.percentage %}
+              <div class="academic-pct-chip">{{ acad.percentage }}</div>
+              {% endif %}
+            </div>
+
+            {% if acad.subjects %}
+            <div style="margin-top: 14px;">
+              <div class="academic-subjects-label">Key Subjects & Coursework</div>
+              <div class="academic-subjects-list">{{ acad.subjects }}</div>
+            </div>
+            {% endif %}
+          </div>
+
+          {% if acad.marksheet_url %}
+          <div>
+            <a href="{{ acad.marksheet_url }}" target="_blank" class="academic-marksheet-btn">
+              📄 View Official Marksheet ↗
+            </a>
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
   <!-- 12. TICKER DIVIDER 4 -->
   <div class="ticker-wrap">
     <div class="ticker">
-      <div class="ticker-item">GLA UNIVERSITY <span>•</span> B.TECH CLASS OF 2028 <span>•</span> AI & DATA ANALYTICS
-        <span>•</span> GET IN TOUCH</div>
-      <div class="ticker-item">GLA UNIVERSITY <span>•</span> B.TECH CLASS OF 2028 <span>•</span> AI & DATA ANALYTICS
-        <span>•</span> GET IN TOUCH</div>
+      <div class="ticker-item">GLA UNIVERSITY <span>•</span> B.TECH CLASS OF 2029 <span>•</span> AI & DATA ANALYTICS
+        <span>•</span> GET IN TOUCH
+      </div>
+      <div class="ticker-item">GLA UNIVERSITY <span>•</span> B.TECH CLASS OF 2029 <span>•</span> AI & DATA ANALYTICS
+        <span>•</span> GET IN TOUCH
+      </div>
     </div>
   </div>
 
@@ -381,12 +429,12 @@
       <div class="resume-paper-card" id="resume-preview-content">
         <div class="resume-header">
           <h2 class="resume-name">Krishna Goyal</h2>
-          <p class="resume-sub">B.Tech AI & Data Analytics Student | GLA University (Class of 2028)</p>
+          <p class="resume-sub">B.Tech AI & Data Analytics Student | GLA University (Class of 2029)</p>
         </div>
         <div class="resume-block">
           <div class="resume-section-title">Education</div>
           <p><strong>GLA University</strong> — B.Tech in Artificial Intelligence & Data Analytics (1st Year, Expected
-            2028)</p>
+            2029)</p>
         </div>
         <div class="resume-block">
           <div class="resume-section-title">Summary & Specs</div>

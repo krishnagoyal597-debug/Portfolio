@@ -220,6 +220,23 @@ async function fetchAchievements() {
   return FALLBACK_DATA.achievements;
 }
 
+async function fetchAcademics() {
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient.from('academics').select('*');
+      if (!error && data && data.length > 0) return data;
+    } catch (e) {}
+  }
+  try {
+    const res = await fetch('/api/data/academics');
+    if (res.ok) {
+      const json = await res.json();
+      if (json.data) return json.data;
+    }
+  } catch (e) {}
+  return FALLBACK_DATA.academics || [];
+}
+
 async function fetchLinks() {
   if (supabaseClient) {
     try {
