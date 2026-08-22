@@ -332,8 +332,14 @@ async function fetchMessages() {
 async function insertRow(table, rowData) {
   let list = getLocalCache(table, FALLBACK_DATA[table] || []);
   if (Array.isArray(list)) {
-    const newRow = { id: 'item-' + Date.now(), ...rowData };
-    list.unshift(newRow);
+    // Update existing item if same id, otherwise prepend
+    const idx = list.findIndex(item => String(item.id) === String(rowData.id));
+    if (idx !== -1) {
+      list[idx] = { ...list[idx], ...rowData };
+    } else {
+      const newRow = { id: 'item-' + Date.now(), ...rowData };
+      list.unshift(newRow);
+    }
     setLocalCache(table, list);
   } else if (typeof list === 'object') {
     if (rowData.key && rowData.value !== undefined) {
@@ -342,18 +348,7 @@ async function insertRow(table, rowData) {
     }
   }
 
-  if (!supabaseClient) {
-    try {
-      await fetch(`/api/data/${table}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(rowData)
-      });
-    } catch (e) { }
-    return rowData;
-  }
-  const { data, error } = await supabaseClient.from(table).insert([rowData]).select();
-  if (error) throw error;
+  // Always sync to backend API
   try {
     await fetch(`/api/data/${table}`, {
       method: 'POST',
@@ -361,7 +356,27 @@ async function insertRow(table, rowData) {
       body: JSON.stringify(rowData)
     });
   } catch (e) { }
-  return data ? data[0] : rowData;
+
+  if (!supabaseClient) return rowData;
+
+  try {
+    // meta and links have unique key constraints — must upsert, not insert
+    if (table === 'meta' || table === 'links') {
+      const { data, error } = await supabaseClient
+        .from(table)
+        .upsert(rowData, { onConflict: 'key' })
+        .select();
+      if (error) throw error;
+      return data ? data[0] : rowData;
+    } else {
+      const { data, error } = await supabaseClient.from(table).insert([rowData]).select();
+      if (error) throw error;
+      return data ? data[0] : rowData;
+    }
+  } catch (err) {
+    console.error('[insertRow error]', table, err);
+    throw err;
+  }
 }
 
 async function updateRow(table, id, rowData) {
