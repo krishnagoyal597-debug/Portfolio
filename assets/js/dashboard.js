@@ -86,7 +86,7 @@ async function loadTabContent(tab) {
   }
 }
 
-/* FILE UPLOD HELPER */
+/* FILE UPLOAD HELPER */
 async function uploadImageFile(fileInput, statusId, callback) {
   const file = fileInput.files[0];
   if (!file) return;
@@ -104,8 +104,12 @@ async function uploadImageFile(fileInput, statusId, callback) {
     });
     const data = await res.json();
     if (res.ok && data.url) {
+      // Make URL absolute so it works when saved to Supabase and loaded from any page
+      const absoluteUrl = data.url.startsWith('http')
+        ? data.url
+        : window.location.origin + data.url;
       if (statusEl) statusEl.textContent = '✓ Uploaded successfully!';
-      if (callback) callback(data.url);
+      if (callback) callback(absoluteUrl);
     } else {
       if (statusEl) statusEl.textContent = '❌ Upload failed: ' + (data.message || 'Error');
     }
@@ -349,15 +353,20 @@ async function saveCroppedProfilePhoto() {
 
       if (res.ok && data.url) {
         if (statusEl) statusEl.textContent = '✓ Uploaded successfully!';
-        
+
+        // Make URL absolute so it works when loaded from Supabase on any page
+        const absoluteUrl = data.url.startsWith('http')
+          ? data.url
+          : window.location.origin + data.url;
+
         // Update input field and preview avatar
         const inputUrl = document.getElementById('profile-url-input');
-        if (inputUrl) inputUrl.value = data.url;
+        if (inputUrl) inputUrl.value = absoluteUrl;
         const prevImg = document.getElementById('profile-preview-img');
-        if (prevImg) prevImg.src = data.url;
+        if (prevImg) prevImg.src = absoluteUrl;
 
         // Auto save to database
-        await insertRow('meta', { key: 'profile_photo_url', value: data.url });
+        await insertRow('meta', { key: 'profile_photo_url', value: absoluteUrl });
 
         closeCropModal();
         alert('✓ Profile photo cropped and set successfully! Syncing portfolio...');

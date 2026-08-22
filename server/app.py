@@ -27,17 +27,21 @@ from generate_portfolio import generate
 load_dotenv()
 
 STATIC_FOLDER = os.path.normpath(os.path.join(BASE_DIR, "../"))
-UPLOADS_FOLDER = os.path.join(STATIC_FOLDER, "assets/uploads")
 
-# Safely handle read-only file system in serverless environments like Vercel
+# On Vercel (and other serverless platforms), /var/task is read-only.
+# The ONLY writable directory is /tmp — always use it for uploads.
+TMP_UPLOADS = "/tmp/uploads"
+os.makedirs(TMP_UPLOADS, exist_ok=True)
+
+# Keep a local uploads folder as a secondary attempt (works locally)
+LOCAL_UPLOADS = os.path.join(STATIC_FOLDER, "assets/uploads")
 try:
-    os.makedirs(UPLOADS_FOLDER, exist_ok=True)
+    os.makedirs(LOCAL_UPLOADS, exist_ok=True)
 except Exception:
-    UPLOADS_FOLDER = "/tmp/uploads"
-    try:
-        os.makedirs(UPLOADS_FOLDER, exist_ok=True)
-    except Exception:
-        pass
+    LOCAL_UPLOADS = None
+
+# Primary uploads folder: always /tmp in production
+UPLOADS_FOLDER = TMP_UPLOADS
 
 app = Flask(__name__, static_folder=STATIC_FOLDER, static_url_path="")
 CORS(app, origins=["*"])
@@ -50,7 +54,7 @@ ALLOWED_TABLES = ["projects", "skills", "certifications", "experience", "achieve
 
 @app.route("/api/upload", methods=["POST"])
 def upload_file():
-    """Upload images/files for profile photo, certificates, projects, and achievements"""
+    """Upload images/files. Saves to /tmp (writable on Vercel) and serves via /api/files/<filename>."""
     try:
         if "file" not in request.files:
             return jsonify({"status": "error", "message": "No file part in request"}), 400
@@ -58,15 +62,43 @@ def upload_file():
         if file.filename == "":
             return jsonify({"status": "error", "message": "No selected file"}), 400
 
-        safe_name = file.filename.replace(" ", "_").replace("/", "_")
+        # Sanitize filename
+        safe_name = file.filename.replace(" ", "_").replace("/", "_").replace(" ", "_")
         filename = f"upload_{int(time.time())}_{safe_name}"
-        filepath = os.path.join(UPLOADS_FOLDER, filename)
-        file.save(filepath)
 
-        public_url = f"assets/uploads/{filename}"
+        # Always save to /tmp first (only writable dir on Vercel serverless)
+        tmp_path = os.path.join(TMP_UPLOADS, filename)
+        file.save(tmp_path)
+
+        # Also try to save to local assets/uploads for local dev serving
+        if LOCAL_UPLOADS:
+            try:
+                import shutil
+                shutil.copy2(tmp_path, os.path.join(LOCAL_UPLOADS, filename))
+            except Exception:
+                pass
+
+        # Return URL via /api/files route which reads from /tmp
+        public_url = f"/api/files/{filename}"
         return jsonify({"status": "success", "url": public_url, "filename": filename})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/files/<path:filename>", methods=["GET"])
+def serve_uploaded_file(filename):
+    """Serve uploaded files from /tmp/uploads (works on Vercel serverless)"""
+    # Try /tmp first (Vercel), then local assets/uploads (local dev)
+    tmp_path = os.path.join(TMP_UPLOADS, filename)
+    if os.path.exists(tmp_path):
+        from flask import send_file
+        return send_file(tmp_path)
+    if LOCAL_UPLOADS:
+        local_path = os.path.join(LOCAL_UPLOADS, filename)
+        if os.path.exists(local_path):
+            from flask import send_file
+            return send_file(local_path)
+    return jsonify({"error": "File not found"}), 404
 
 
 # ─── PUBLIC DYNAMIC ROUTES ───────────────────────────────
