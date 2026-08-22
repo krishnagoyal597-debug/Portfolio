@@ -6,10 +6,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   initNavbar();
   initBackToTop();
   initRevealAnimations();
-  
+
   // Load data from Supabase or Fallback
   await loadPortfolioData();
-  
+
   initSkillsFilter();
   initProjectModal();
   initContactForm();
@@ -104,7 +104,7 @@ function initRevealAnimations() {
 function animateCounter(el) {
   const numEl = el.querySelector('.counter-number');
   if (!numEl || numEl.dataset.animated) return;
-  
+
   const target = parseInt(numEl.getAttribute('data-target') || '0');
   let current = 0;
   const increment = Math.max(1, Math.ceil(target / 40));
@@ -123,13 +123,12 @@ function animateCounter(el) {
 /* 5. LOAD ALL DATA & DYNAMICALLY RENDER SECTIONS */
 async function loadPortfolioData() {
   try {
-    const [projects, skills, certs, experience, achievements, academics, linksData, metaData] = await Promise.all([
+    const [projects, skills, certs, experience, achievements, linksData, metaData] = await Promise.all([
       fetchProjects(),
       fetchSkills(),
       fetchCertifications(),
       fetchExperience(),
       fetchAchievements(),
-      fetchAcademics(),
       fetchLinks(),
       fetchMeta()
     ]);
@@ -141,7 +140,6 @@ async function loadPortfolioData() {
     renderExperience(experience);
     renderCertifications(certs);
     renderAchievements(achievements);
-    renderAcademics(academics);
     renderResume(metaData, linksData, projects, skills, certs);
 
     // Update counters
@@ -292,12 +290,12 @@ function renderResume(metaData, linksData, projects, skills, certs) {
   container.innerHTML = `
     <div class="resume-header">
       <h2 class="resume-name">Krishna Goyal</h2>
-      <p class="resume-sub">B.Tech AI & Data Analytics Student | GLA University (Class of 2028)</p>
+      <p class="resume-sub">B.Tech AI & Data Analytics Student | GLA University (Class of 2029)</p>
     </div>
 
     <div class="resume-block">
       <div class="resume-section-title">Education</div>
-      <p><strong>GLA University</strong> — B.Tech in Artificial Intelligence & Data Analytics (1st Year, Expected 2028)</p>
+      <p><strong>GLA University</strong> — B.Tech in Artificial Intelligence & Data Analytics (1st Year, Expected 2029)</p>
     </div>
 
     <div class="resume-block">
@@ -399,43 +397,4 @@ function initContactForm() {
       statusEl.textContent = '❌ Something went wrong. Please try again.';
     }
   });
-}
-
-function renderAcademics(academics) {
-  const container = document.getElementById('academics-grid-container');
-  if (!container || !academics || academics.length === 0) return;
-
-  container.innerHTML = academics.map(a => `
-    <div class="academic-card reveal active">
-      <div>
-        <div class="academic-header">
-          <div>
-            <h3 class="academic-title">${a.semester}</h3>
-            <div class="academic-program">${a.degree_program || 'B.Tech AI & Data Analytics'}</div>
-          </div>
-          ${a.session_year ? `<span class="mono-chip" style="color: var(--accent); background: var(--accent-light); padding: 4px 10px; border-radius: 6px; font-size: 0.78rem;">${a.session_year}</span>` : ''}
-        </div>
-        
-        <div class="academic-scores">
-          <div class="academic-score-chip">${a.sgpa_cgpa}</div>
-          ${a.percentage ? `<div class="academic-pct-chip">${a.percentage}</div>` : ''}
-        </div>
-
-        ${a.subjects ? `
-        <div style="margin-top: 14px;">
-          <div class="academic-subjects-label">Key Subjects & Coursework</div>
-          <div class="academic-subjects-list">${a.subjects}</div>
-        </div>
-        ` : ''}
-      </div>
-
-      ${a.marksheet_url ? `
-      <div>
-        <a href="${a.marksheet_url}" target="_blank" class="academic-marksheet-btn">
-          📄 View Official Marksheet ↗
-        </a>
-      </div>
-      ` : ''}
-    </div>
-  `).join('');
 }

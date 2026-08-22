@@ -50,13 +50,15 @@ def generate():
     if not os.path.isabs(output_path):
         output_path = os.path.normpath(os.path.join(template_dir, output_path))
 
-    # Ensure parent directory exists
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    # Safely attempt to write output html on disk (may fail on read-only serverless filesystems like Vercel)
+    try:
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write(rendered_html)
+        print(f"✓ Portfolio generated → {output_path}")
+    except Exception as e:
+        print(f"ℹ [Serverless Note] Could not write index.html to disk: {e}")
 
-    with open(output_path, "w", encoding="utf-8") as f:
-        f.write(rendered_html)
-
-    print(f"✓ Portfolio generated → {output_path}")
     return {
         "status": "success",
         "output": output_path,

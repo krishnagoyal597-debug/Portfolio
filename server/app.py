@@ -1,4 +1,12 @@
 import os
+import sys
+import time
+
+# Ensure server directory is in Python path for Vercel deployment imports
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
 from flask import Flask, request, jsonify, send_from_directory, render_template_string
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -16,14 +24,20 @@ from supabase_client import (
 from gemini_client import generate_portfolio_content
 from generate_portfolio import generate
 
-import time
-
 load_dotenv()
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_FOLDER = os.path.normpath(os.path.join(BASE_DIR, "../"))
 UPLOADS_FOLDER = os.path.join(STATIC_FOLDER, "assets/uploads")
-os.makedirs(UPLOADS_FOLDER, exist_ok=True)
+
+# Safely handle read-only file system in serverless environments like Vercel
+try:
+    os.makedirs(UPLOADS_FOLDER, exist_ok=True)
+except Exception:
+    UPLOADS_FOLDER = "/tmp/uploads"
+    try:
+        os.makedirs(UPLOADS_FOLDER, exist_ok=True)
+    except Exception:
+        pass
 
 app = Flask(__name__, static_folder=STATIC_FOLDER, static_url_path="")
 CORS(app, origins=["*"])

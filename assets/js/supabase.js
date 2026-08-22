@@ -128,7 +128,7 @@ const FALLBACK_DATA = {
   meta: [
     { key: 'bio', value: 'I am a first-year B.Tech student at GLA University specializing in Artificial Intelligence and Data Analytics. I enjoy building practical projects, learning new technologies and solving real-world problems through code.' },
     { key: 'tagline', value: 'B.Tech AI & Data Analytics Student @ GLA University' },
-    { key: 'resume_summary', value: 'Krishna Goyal — B.Tech AI & Data Analytics Student at GLA University (Class of 2028). Skilled in Python, Machine Learning, Data Analytics, and SQL.' },
+    { key: 'resume_summary', value: 'Krishna Goyal — B.Tech AI & Data Analytics Student at GLA University (Class of 2029). Skilled in Python, Machine Learning, Data Analytics, and SQL.' },
     { key: 'profile_photo_url', value: 'assets/images/profile.svg' }
   ],
   messages: []
@@ -140,7 +140,7 @@ async function fetchProjects() {
     try {
       const { data, error } = await supabaseClient.from('projects').select('*').order('created_at', { ascending: false });
       if (!error && data && data.length > 0) return data;
-    } catch (e) {}
+    } catch (e) { }
   }
   try {
     const res = await fetch('/api/data/projects');
@@ -148,7 +148,7 @@ async function fetchProjects() {
       const json = await res.json();
       if (json.data) return json.data;
     }
-  } catch (e) {}
+  } catch (e) { }
   return FALLBACK_DATA.projects;
 }
 
@@ -157,7 +157,7 @@ async function fetchSkills() {
     try {
       const { data, error } = await supabaseClient.from('skills').select('*').order('category');
       if (!error && data && data.length > 0) return data;
-    } catch (e) {}
+    } catch (e) { }
   }
   try {
     const res = await fetch('/api/data/skills');
@@ -165,7 +165,7 @@ async function fetchSkills() {
       const json = await res.json();
       if (json.data) return json.data;
     }
-  } catch (e) {}
+  } catch (e) { }
   return FALLBACK_DATA.skills;
 }
 
@@ -174,7 +174,7 @@ async function fetchCertifications() {
     try {
       const { data, error } = await supabaseClient.from('certifications').select('*').order('date_earned', { ascending: false });
       if (!error && data) return data;
-    } catch (e) {}
+    } catch (e) { }
   }
   try {
     const res = await fetch('/api/data/certifications');
@@ -182,7 +182,7 @@ async function fetchCertifications() {
       const json = await res.json();
       if (json.data) return json.data;
     }
-  } catch (e) {}
+  } catch (e) { }
   return FALLBACK_DATA.certifications;
 }
 
@@ -191,7 +191,7 @@ async function fetchExperience() {
     try {
       const { data, error } = await supabaseClient.from('experience').select('*').order('start_date', { ascending: false });
       if (!error && data && data.length > 0) return data;
-    } catch (e) {}
+    } catch (e) { }
   }
   try {
     const res = await fetch('/api/data/experience');
@@ -199,7 +199,7 @@ async function fetchExperience() {
       const json = await res.json();
       if (json.data) return json.data;
     }
-  } catch (e) {}
+  } catch (e) { }
   return FALLBACK_DATA.experience;
 }
 
@@ -208,7 +208,7 @@ async function fetchAchievements() {
     try {
       const { data, error } = await supabaseClient.from('achievements').select('*').order('date_achieved', { ascending: false });
       if (!error && data && data.length > 0) return data;
-    } catch (e) {}
+    } catch (e) { }
   }
   try {
     const res = await fetch('/api/data/achievements');
@@ -216,25 +216,8 @@ async function fetchAchievements() {
       const json = await res.json();
       if (json.data) return json.data;
     }
-  } catch (e) {}
+  } catch (e) { }
   return FALLBACK_DATA.achievements;
-}
-
-async function fetchAcademics() {
-  if (supabaseClient) {
-    try {
-      const { data, error } = await supabaseClient.from('academics').select('*');
-      if (!error && data && data.length > 0) return data;
-    } catch (e) {}
-  }
-  try {
-    const res = await fetch('/api/data/academics');
-    if (res.ok) {
-      const json = await res.json();
-      if (json.data) return json.data;
-    }
-  } catch (e) {}
-  return FALLBACK_DATA.academics || [];
 }
 
 async function fetchLinks() {
@@ -242,7 +225,7 @@ async function fetchLinks() {
     try {
       const { data, error } = await supabaseClient.from('links').select('*');
       if (!error && data && data.length > 0) return data;
-    } catch (e) {}
+    } catch (e) { }
   }
   try {
     const res = await fetch('/api/data/links');
@@ -250,7 +233,7 @@ async function fetchLinks() {
       const json = await res.json();
       if (json.data) return json.data;
     }
-  } catch (e) {}
+  } catch (e) { }
   return FALLBACK_DATA.links;
 }
 
@@ -259,7 +242,7 @@ async function fetchMeta() {
     try {
       const { data, error } = await supabaseClient.from('meta').select('*');
       if (!error && data && data.length > 0) return data;
-    } catch (e) {}
+    } catch (e) { }
   }
   try {
     const res = await fetch('/api/data/meta');
@@ -267,7 +250,7 @@ async function fetchMeta() {
       const json = await res.json();
       if (json.data) return json.data;
     }
-  } catch (e) {}
+  } catch (e) { }
   return FALLBACK_DATA.meta;
 }
 
@@ -276,7 +259,7 @@ async function fetchMessages() {
     try {
       const { data, error } = await supabaseClient.from('messages').select('*').order('received_at', { ascending: false });
       if (!error && data) return data;
-    } catch (e) {}
+    } catch (e) { }
   }
   try {
     const res = await fetch('/api/data/messages');
@@ -284,7 +267,7 @@ async function fetchMessages() {
       const json = await res.json();
       if (json.data) return json.data;
     }
-  } catch (e) {}
+  } catch (e) { }
   return FALLBACK_DATA.messages;
 }
 
@@ -301,7 +284,7 @@ async function insertRow(table, rowData) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(rowData)
       });
-    } catch (e) {}
+    } catch (e) { }
     return rowData;
   }
   const { data, error } = await supabaseClient.from(table).insert([rowData]).select();
@@ -312,7 +295,7 @@ async function insertRow(table, rowData) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(rowData)
     });
-  } catch (e) {}
+  } catch (e) { }
   return data ? data[0] : rowData;
 }
 
@@ -328,7 +311,7 @@ async function updateRow(table, id, rowData) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(rowData)
       });
-    } catch (e) {}
+    } catch (e) { }
     return rowData;
   }
   const { data, error } = await supabaseClient.from(table).update(rowData).eq('id', id).select();
@@ -339,7 +322,7 @@ async function updateRow(table, id, rowData) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(rowData)
     });
-  } catch (e) {}
+  } catch (e) { }
   return data ? data[0] : rowData;
 }
 
@@ -349,12 +332,12 @@ async function deleteRow(table, id) {
   }
   try {
     await fetch(`/api/data/${table}/${id}`, { method: 'DELETE' });
-  } catch (e) {}
+  } catch (e) { }
 
   if (supabaseClient) {
     try {
       await supabaseClient.from(table).delete().eq('id', id);
-    } catch (e) {}
+    } catch (e) { }
   }
   return true;
 }

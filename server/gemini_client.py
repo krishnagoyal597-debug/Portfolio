@@ -1,5 +1,6 @@
 import os
 import json
+# pyrefly: ignore [missing-import]
 import google.generativeai as genai
 from dotenv import load_dotenv
 
@@ -11,7 +12,12 @@ model = None
 if GEMINI_API_KEY and not GEMINI_API_KEY.startswith("your_google"):
     try:
         genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        for m in ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-lite", "gemini-1.0-pro"]:
+            try:
+                model = genai.GenerativeModel(m)
+                break
+            except Exception:
+                pass
     except Exception as e:
         print(f"[Gemini Warning] Could not configure Gemini API: {e}")
         model = None
@@ -25,7 +31,7 @@ def generate_portfolio_content(portfolio_data: dict) -> dict:
     fallback_result = {
         "hero_tagline": "AI & Data Analytics Student | Machine Learning Developer | GLA University",
         "bio": "I am Krishna, a first-year B.Tech student specializing in Artificial Intelligence & Data Analytics at GLA University. I am passionate about building intelligent systems and solving real-world problems with data. Currently exploring deep learning, Python, and data engineering.",
-        "resume_summary": "> Name: Krishna\n> Degree: B.Tech AI & Data Analytics\n> University: GLA University\n> Status: First Year | Class of 2028\n> Core Skills: Python, Machine Learning, SQL, PyTorch, Data Analytics\n> Open To: Summer Internships & Research Projects ✓",
+        "resume_summary": "> Name: Krishna\n> Degree: B.Tech AI & Data Analytics\n> University: GLA University\n> Status: First Year | Class of 2029\n> Core Skills: Python, Machine Learning, SQL, PyTorch, Data Analytics\n> Open To: Summer Internships & Research Projects ✓",
         "skills_intro": "Technologies, frameworks, and data platforms I work with",
         "project_summaries": {
             proj.get("title", ""): proj.get("description", "")

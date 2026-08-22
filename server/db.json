@@ -31,6 +31,33 @@
       "featured": true,
       "created_at": "2026-02-10T00:00:00Z",
       "ai_summary": "ETL pipeline automating large scale data extraction and classification."
+    },
+    {
+      "id": "item-3",
+      "title": "kjnml.",
+      "description": "hjbknm",
+      "tech_stack": [
+        "iklm"
+      ],
+      "github_url": "https://github.com/krishnagoyal597",
+      "live_url": "https://demo.example.com",
+      "image_url": "assets/uploads/upload_1787404226_IMG-20260821-WA0039.jpg",
+      "featured": true,
+      "created_at": "2026-08-22T13:10:33.235Z",
+      "ai_summary": "hjbknm"
+    },
+    {
+      "id": "item-4",
+      "title": "kjnml.",
+      "description": "hjbknm",
+      "tech_stack": [
+        "iklm"
+      ],
+      "github_url": "https://github.com/krishnagoyal597",
+      "live_url": "https://demo.example.com",
+      "image_url": "assets/uploads/upload_1787404263_ChatGPT_Image_Aug_21,_2026,_08_16_27_PM.png",
+      "featured": true,
+      "created_at": "2026-08-22T13:11:05.402Z"
     }
   ],
   "skills": [
@@ -63,6 +90,30 @@
       "name": "Flask & Web APIs",
       "category": "Web",
       "proficiency": 82
+    },
+    {
+      "id": "item-6",
+      "name": "python",
+      "category": "Programming",
+      "proficiency": 90
+    },
+    {
+      "id": "item-7",
+      "name": "python",
+      "category": "Programming",
+      "proficiency": 90
+    },
+    {
+      "id": "item-8",
+      "name": "java",
+      "category": "Programming",
+      "proficiency": 90
+    },
+    {
+      "id": "item-9",
+      "name": "sql",
+      "category": "Databases",
+      "proficiency": 90
     }
   ],
   "certifications": [
@@ -123,7 +174,6 @@
       "image_url": "assets/images/cert-python.svg"
     }
   ],
-  "academics": [],
   "links": {
     "github": "https://github.com/krishnagoyal597-debug",
     "linkedin": "https://www.linkedin.com/in/krishnagoyal597/",
@@ -134,6 +184,7 @@
     "tagline": "AI & Data Analytics Student | Builder | Learner @ GLA University",
     "bio": "I am Krishna, a first-year B.Tech student specializing in Artificial Intelligence & Data Analytics at GLA University. I am passionate about building intelligent systems and solving real-world problems with data.",
     "resume_summary": "> Name: Krishna\n> Degree: B.Tech AI & Data Analytics\n> University: GLA University\n> Status: Second Year | Class of 2029\n> Skills: Python, ML, Data Analytics, SQL, Linear Algebra\n> Open To: Internships \u2713",
-    "profile_photo_url": "assets/uploads/upload_1786254935_profile_crop_IMG_20251115_165937.jpg"
-  }
+    "profile_photo_url": "assets/uploads/upload_1787403979_profile_crop_IMG_20260821_164917.jpg"
+  },
+  "academics": []
 }

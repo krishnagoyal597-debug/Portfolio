@@ -98,28 +98,6 @@ FALLBACK_DATA = {
             "image_url": "assets/images/cert-python.svg"
         }
     ],
-    "academics": [
-        {
-            "id": "acad-1",
-            "semester": "Semester 1 (Fall 2024)",
-            "degree_program": "B.Tech AI & Data Analytics",
-            "sgpa_cgpa": "9.20 SGPA",
-            "percentage": "87.5%",
-            "session_year": "2024-2025",
-            "subjects": "Programming in Python, Calculus & Linear Algebra, Engineering Physics, Basic Electrical Engg",
-            "marksheet_url": ""
-        },
-        {
-            "id": "acad-2",
-            "semester": "Semester 2 (Spring 2025)",
-            "degree_program": "B.Tech AI & Data Analytics",
-            "sgpa_cgpa": "9.35 SGPA",
-            "percentage": "88.8%",
-            "session_year": "2024-2025",
-            "subjects": "Data Structures & Algorithms, Discrete Mathematics, Database Systems, Data Science Fundamentals",
-            "marksheet_url": ""
-        }
-    ],
     "links": {
         "github": "https://github.com/krishnagoyal597",
         "linkedin": "https://linkedin.com/in/krishnagoyal",
@@ -129,7 +107,7 @@ FALLBACK_DATA = {
     "meta": {
         "tagline": "AI & Data Analytics Student | Builder | Learner @ GLA University",
         "bio": "I am Krishna, a first-year B.Tech student specializing in Artificial Intelligence & Data Analytics at GLA University. I am passionate about building intelligent systems and solving real-world problems with data.",
-        "resume_summary": "> Name: Krishna\n> Degree: B.Tech AI & Data Analytics\n> University: GLA University\n> Status: First Year | Class of 2028\n> Skills: Python, ML, Data Analytics, SQL, Linear Algebra\n> Open To: Internships ✓",
+        "resume_summary": "> Name: Krishna\n> Degree: B.Tech AI & Data Analytics\n> University: GLA University\n> Status: First Year | Class of 2029\n> Skills: Python, ML, Data Analytics, SQL, Linear Algebra\n> Open To: Internships ✓",
         "profile_photo_url": "assets/images/profile.svg"
     }
 }
