@@ -158,12 +158,22 @@ async function loadPortfolioData() {
 }
 
 function renderBio(metaData) {
+  if (!metaData) return;
   const bioEl = document.getElementById('about-bio-text');
   const metaMap = {};
-  metaData.forEach(m => metaMap[m.key] = m.value);
+  if (Array.isArray(metaData)) {
+    metaData.forEach(m => { if (m && m.key) metaMap[m.key] = m.value; });
+  } else if (typeof metaData === 'object') {
+    Object.assign(metaMap, metaData);
+  }
 
   if (bioEl && metaMap.bio) {
     bioEl.textContent = metaMap.bio;
+  }
+
+  if (metaMap.tagline) {
+    const taglineEl = document.querySelector('.hero-subtitle');
+    if (taglineEl) taglineEl.textContent = metaMap.tagline;
   }
 
   if (metaMap.profile_photo_url) {
@@ -175,8 +185,13 @@ function renderBio(metaData) {
 }
 
 function renderLinks(linksData) {
+  if (!linksData) return;
   const linkMap = {};
-  linksData.forEach(item => linkMap[item.key] = item.value);
+  if (Array.isArray(linksData)) {
+    linksData.forEach(item => { if (item && item.key) linkMap[item.key] = item.value; });
+  } else if (typeof linksData === 'object') {
+    Object.assign(linkMap, linksData);
+  }
 
   const resumeBtn = document.getElementById('btn-download-resume');
   if (resumeBtn && linkMap.resume_url) {
@@ -195,7 +210,7 @@ function renderLinks(linksData) {
 
 function renderSkills(skills) {
   const container = document.getElementById('skills-grid-container');
-  if (!container) return;
+  if (!container || !skills) return;
 
   container.innerHTML = skills.map(s => `
     <div class="skill-card reveal active" data-category="${s.category}">
@@ -209,7 +224,7 @@ function renderSkills(skills) {
 
 function renderProjects(projects) {
   const container = document.getElementById('projects-row-container');
-  if (!container) return;
+  if (!container || !projects) return;
 
   container.innerHTML = projects.map(p => `
     <div class="project-card" data-project-id="${p.id}">
@@ -233,7 +248,7 @@ function renderProjects(projects) {
 
 function renderExperience(experience) {
   const container = document.getElementById('timeline-container');
-  if (!container) return;
+  if (!container || !experience) return;
 
   container.innerHTML = experience.map(e => `
     <div class="timeline-item reveal active">
@@ -258,7 +273,7 @@ function renderExperience(experience) {
 
 function renderCertifications(certs) {
   const container = document.getElementById('certs-grid-container');
-  if (!container) return;
+  if (!container || !certs) return;
 
   container.innerHTML = certs.map(c => `
     <div class="cert-card reveal active">
@@ -276,6 +291,25 @@ function renderCertifications(certs) {
           <a href="${c.certificate_url}" target="_blank" class="project-link">View Certificate →</a>
         </div>
       ` : ''}
+    </div>
+  `).join('');
+}
+
+function renderAchievements(achievements) {
+  const container = document.getElementById('achievements-grid-container');
+  if (!container || !achievements) return;
+
+  container.innerHTML = achievements.map(a => `
+    <div class="cert-card reveal active">
+      ${a.image_url ? `
+        <div class="cert-img-frame">
+          <img src="${a.image_url}" alt="${a.title}" loading="lazy">
+        </div>
+      ` : ''}
+      <span class="mono-chip" style="color: var(--accent); background: var(--accent-light); padding: 2px 10px; border-radius: 6px; font-size: 0.75rem; display: inline-block; margin-bottom: 8px;">${a.category || 'Achievement'}</span>
+      <h3 class="cert-title">${a.title}</h3>
+      <div class="cert-date">Date: ${a.date_achieved || 'N/A'}</div>
+      ${a.description ? `<p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 8px;">${a.description}</p>` : ''}
     </div>
   `).join('');
 }

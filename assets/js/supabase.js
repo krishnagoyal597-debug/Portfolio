@@ -134,124 +134,181 @@ const FALLBACK_DATA = {
   messages: []
 };
 
+/* LocalStorage Sync Helpers */
+function getLocalCache(key, fallback) {
+  try {
+    const saved = localStorage.getItem('portfolio_' + key);
+    if (saved) return JSON.parse(saved);
+  } catch (e) { }
+  return fallback;
+}
+
+function setLocalCache(key, data) {
+  try {
+    localStorage.setItem('portfolio_' + key, JSON.stringify(data));
+  } catch (e) { }
+}
+
 /* Data Retrieval Helpers */
 async function fetchProjects() {
   if (supabaseClient) {
     try {
       const { data, error } = await supabaseClient.from('projects').select('*').order('created_at', { ascending: false });
-      if (!error && data && data.length > 0) return data;
+      if (!error && data && data.length > 0) {
+        setLocalCache('projects', data);
+        return data;
+      }
     } catch (e) { }
   }
   try {
     const res = await fetch('/api/data/projects');
     if (res.ok) {
       const json = await res.json();
-      if (json.data) return json.data;
+      if (json.data && json.data.length > 0) {
+        setLocalCache('projects', json.data);
+        return json.data;
+      }
     }
   } catch (e) { }
-  return FALLBACK_DATA.projects;
+  return getLocalCache('projects', FALLBACK_DATA.projects);
 }
 
 async function fetchSkills() {
   if (supabaseClient) {
     try {
       const { data, error } = await supabaseClient.from('skills').select('*').order('category');
-      if (!error && data && data.length > 0) return data;
+      if (!error && data && data.length > 0) {
+        setLocalCache('skills', data);
+        return data;
+      }
     } catch (e) { }
   }
   try {
     const res = await fetch('/api/data/skills');
     if (res.ok) {
       const json = await res.json();
-      if (json.data) return json.data;
+      if (json.data && json.data.length > 0) {
+        setLocalCache('skills', json.data);
+        return json.data;
+      }
     }
   } catch (e) { }
-  return FALLBACK_DATA.skills;
+  return getLocalCache('skills', FALLBACK_DATA.skills);
 }
 
 async function fetchCertifications() {
   if (supabaseClient) {
     try {
       const { data, error } = await supabaseClient.from('certifications').select('*').order('date_earned', { ascending: false });
-      if (!error && data) return data;
+      if (!error && data && data.length > 0) {
+        setLocalCache('certifications', data);
+        return data;
+      }
     } catch (e) { }
   }
   try {
     const res = await fetch('/api/data/certifications');
     if (res.ok) {
       const json = await res.json();
-      if (json.data) return json.data;
+      if (json.data && json.data.length > 0) {
+        setLocalCache('certifications', json.data);
+        return json.data;
+      }
     }
   } catch (e) { }
-  return FALLBACK_DATA.certifications;
+  return getLocalCache('certifications', FALLBACK_DATA.certifications);
 }
 
 async function fetchExperience() {
   if (supabaseClient) {
     try {
       const { data, error } = await supabaseClient.from('experience').select('*').order('start_date', { ascending: false });
-      if (!error && data && data.length > 0) return data;
+      if (!error && data && data.length > 0) {
+        setLocalCache('experience', data);
+        return data;
+      }
     } catch (e) { }
   }
   try {
     const res = await fetch('/api/data/experience');
     if (res.ok) {
       const json = await res.json();
-      if (json.data) return json.data;
+      if (json.data && json.data.length > 0) {
+        setLocalCache('experience', json.data);
+        return json.data;
+      }
     }
   } catch (e) { }
-  return FALLBACK_DATA.experience;
+  return getLocalCache('experience', FALLBACK_DATA.experience);
 }
 
 async function fetchAchievements() {
   if (supabaseClient) {
     try {
       const { data, error } = await supabaseClient.from('achievements').select('*').order('date_achieved', { ascending: false });
-      if (!error && data && data.length > 0) return data;
+      if (!error && data && data.length > 0) {
+        setLocalCache('achievements', data);
+        return data;
+      }
     } catch (e) { }
   }
   try {
     const res = await fetch('/api/data/achievements');
     if (res.ok) {
       const json = await res.json();
-      if (json.data) return json.data;
+      if (json.data && json.data.length > 0) {
+        setLocalCache('achievements', json.data);
+        return json.data;
+      }
     }
   } catch (e) { }
-  return FALLBACK_DATA.achievements;
+  return getLocalCache('achievements', FALLBACK_DATA.achievements);
 }
 
 async function fetchLinks() {
   if (supabaseClient) {
     try {
       const { data, error } = await supabaseClient.from('links').select('*');
-      if (!error && data && data.length > 0) return data;
+      if (!error && data && data.length > 0) {
+        setLocalCache('links', data);
+        return data;
+      }
     } catch (e) { }
   }
   try {
     const res = await fetch('/api/data/links');
     if (res.ok) {
       const json = await res.json();
-      if (json.data) return json.data;
+      if (json.data) {
+        setLocalCache('links', json.data);
+        return json.data;
+      }
     }
   } catch (e) { }
-  return FALLBACK_DATA.links;
+  return getLocalCache('links', FALLBACK_DATA.links);
 }
 
 async function fetchMeta() {
   if (supabaseClient) {
     try {
       const { data, error } = await supabaseClient.from('meta').select('*');
-      if (!error && data && data.length > 0) return data;
+      if (!error && data && data.length > 0) {
+        setLocalCache('meta', data);
+        return data;
+      }
     } catch (e) { }
   }
   try {
     const res = await fetch('/api/data/meta');
     if (res.ok) {
       const json = await res.json();
-      if (json.data) return json.data;
+      if (json.data) {
+        setLocalCache('meta', json.data);
+        return json.data;
+      }
     }
   } catch (e) { }
-  return FALLBACK_DATA.meta;
+  return getLocalCache('meta', FALLBACK_DATA.meta);
 }
 
 async function fetchMessages() {
@@ -273,10 +330,18 @@ async function fetchMessages() {
 
 /* CRUD Helpers */
 async function insertRow(table, rowData) {
-  if (FALLBACK_DATA[table]) {
-    const newRow = { id: 'mock-' + Date.now(), ...rowData };
-    FALLBACK_DATA[table].push(newRow);
+  let list = getLocalCache(table, FALLBACK_DATA[table] || []);
+  if (Array.isArray(list)) {
+    const newRow = { id: 'item-' + Date.now(), ...rowData };
+    list.unshift(newRow);
+    setLocalCache(table, list);
+  } else if (typeof list === 'object') {
+    if (rowData.key && rowData.value !== undefined) {
+      list[rowData.key] = rowData.value;
+      setLocalCache(table, list);
+    }
   }
+
   if (!supabaseClient) {
     try {
       await fetch(`/api/data/${table}`, {
@@ -300,9 +365,13 @@ async function insertRow(table, rowData) {
 }
 
 async function updateRow(table, id, rowData) {
-  if (FALLBACK_DATA[table]) {
-    const idx = FALLBACK_DATA[table].findIndex(item => item.id === id);
-    if (idx !== -1) FALLBACK_DATA[table][idx] = { ...FALLBACK_DATA[table][idx], ...rowData };
+  let list = getLocalCache(table, FALLBACK_DATA[table] || []);
+  if (Array.isArray(list)) {
+    const idx = list.findIndex(item => String(item.id) === String(id));
+    if (idx !== -1) {
+      list[idx] = { ...list[idx], ...rowData };
+      setLocalCache(table, list);
+    }
   }
   if (!supabaseClient) {
     try {
@@ -327,8 +396,10 @@ async function updateRow(table, id, rowData) {
 }
 
 async function deleteRow(table, id) {
-  if (FALLBACK_DATA[table]) {
-    FALLBACK_DATA[table] = FALLBACK_DATA[table].filter(item => String(item.id) !== String(id));
+  let list = getLocalCache(table, FALLBACK_DATA[table] || []);
+  if (Array.isArray(list)) {
+    list = list.filter(item => String(item.id) !== String(id));
+    setLocalCache(table, list);
   }
   try {
     await fetch(`/api/data/${table}/${id}`, { method: 'DELETE' });
