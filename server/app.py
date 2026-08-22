@@ -54,7 +54,11 @@ ALLOWED_TABLES = ["projects", "skills", "certifications", "experience", "achieve
 
 @app.route("/api/upload", methods=["POST"])
 def upload_file():
-    """Upload images/files. Saves to /tmp (writable on Vercel) and serves via /api/files/<filename>."""
+    """
+    Upload handler for Vercel serverless.
+    Converts file to a Base64 data URL — no filesystem or storage bucket needed.
+    The data URL is stored directly in Supabase meta/DB and works everywhere.
+    """
     try:
         if "file" not in request.files:
             return jsonify({"status": "error", "message": "No file part in request"}), 400
@@ -62,25 +66,27 @@ def upload_file():
         if file.filename == "":
             return jsonify({"status": "error", "message": "No selected file"}), 400
 
-        # Sanitize filename
-        safe_name = file.filename.replace(" ", "_").replace("/", "_").replace(" ", "_")
+        # Read file bytes into memory — no disk write needed
+        file_bytes = file.read()
+        content_type = file.content_type or "image/jpeg"
+
+        # Limit: 5MB max to keep DB rows reasonable
+        max_bytes = 5 * 1024 * 1024
+        if len(file_bytes) > max_bytes:
+            return jsonify({"status": "error", "message": "File too large. Maximum size is 5MB."}), 400
+
+        # Convert to Base64 data URL — works in any <img src="...">
+        import base64
+        b64 = base64.b64encode(file_bytes).decode("utf-8")
+        data_url = f"data:{content_type};base64,{b64}"
+
+        # Sanitize filename for metadata
+        raw_name = file.filename or "upload.jpg"
+        safe_name = "".join(c if c.isalnum() or c in "._-" else "_" for c in raw_name)
         filename = f"upload_{int(time.time())}_{safe_name}"
 
-        # Always save to /tmp first (only writable dir on Vercel serverless)
-        tmp_path = os.path.join(TMP_UPLOADS, filename)
-        file.save(tmp_path)
+        return jsonify({"status": "success", "url": data_url, "filename": filename})
 
-        # Also try to save to local assets/uploads for local dev serving
-        if LOCAL_UPLOADS:
-            try:
-                import shutil
-                shutil.copy2(tmp_path, os.path.join(LOCAL_UPLOADS, filename))
-            except Exception:
-                pass
-
-        # Return URL via /api/files route which reads from /tmp
-        public_url = f"/api/files/{filename}"
-        return jsonify({"status": "success", "url": public_url, "filename": filename})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
