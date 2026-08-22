@@ -2,8 +2,8 @@
    SUPABASE CLIENT & API DATA HELPERS
    ==================================================================== */
 
-const SUPABASE_URL = 'https://your-project.supabase.co';
-const SUPABASE_ANON_KEY = 'your_supabase_anon_key';
+const SUPABASE_URL = 'https://tqgbxuyzbcrekeshxino.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxZ2J4dXl6YmNyZWtlc2h4aW5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYyMDU2NjgsImV4cCI6MjEwMTc4MTY2OH0.GlbzHcAbGhlGnswHZvl1UyMKIfE8bTdUsoOt7XNlM00';
 
 let supabaseClient = null;
 
