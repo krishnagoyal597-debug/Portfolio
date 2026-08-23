@@ -362,12 +362,25 @@ async function insertRow(table, rowData) {
   try {
     // meta and links have unique key constraints — must upsert, not insert
     if (table === 'meta' || table === 'links') {
-      const { data, error } = await supabaseClient
-        .from(table)
-        .upsert(rowData, { onConflict: 'key' })
-        .select();
-      if (error) throw error;
-      return data ? data[0] : rowData;
+      try {
+        const { data, error } = await supabaseClient
+          .from(table)
+          .upsert(rowData, { onConflict: 'key' })
+          .select();
+        if (error) throw error;
+        return data ? data[0] : rowData;
+      } catch (upsertErr) {
+        // Fallback: update existing row by key if upsert encounters constraint edge cases
+        if (rowData.key) {
+          const { data, error } = await supabaseClient
+            .from(table)
+            .update({ value: rowData.value, updated_at: new Date().toISOString() })
+            .eq('key', rowData.key)
+            .select();
+          if (!error && data && data.length > 0) return data[0];
+        }
+        throw upsertErr;
+      }
     } else {
       const { data, error } = await supabaseClient.from(table).insert([rowData]).select();
       if (error) throw error;
