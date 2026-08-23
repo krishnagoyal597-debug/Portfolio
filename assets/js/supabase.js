@@ -348,7 +348,24 @@ async function insertRow(table, rowData) {
     }
   }
 
-  // Always sync to backend API
+  // For meta and links: use backend API only (it handles Supabase upsert server-side).
+  // This avoids double-write race conditions that cause unique constraint violations.
+  if (table === 'meta' || table === 'links') {
+    try {
+      const res = await fetch(`/api/data/${table}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(rowData)
+      });
+      const result = await res.json();
+      return result.data || rowData;
+    } catch (e) {
+      console.warn('[insertRow meta/links API error]', e);
+      return rowData;
+    }
+  }
+
+  // For other tables: sync to backend API, then also write via Supabase JS client
   try {
     await fetch(`/api/data/${table}`, {
       method: 'POST',
@@ -360,32 +377,9 @@ async function insertRow(table, rowData) {
   if (!supabaseClient) return rowData;
 
   try {
-    // meta and links have unique key constraints — must upsert, not insert
-    if (table === 'meta' || table === 'links') {
-      try {
-        const { data, error } = await supabaseClient
-          .from(table)
-          .upsert(rowData, { onConflict: 'key' })
-          .select();
-        if (error) throw error;
-        return data ? data[0] : rowData;
-      } catch (upsertErr) {
-        // Fallback: update existing row by key if upsert encounters constraint edge cases
-        if (rowData.key) {
-          const { data, error } = await supabaseClient
-            .from(table)
-            .update({ value: rowData.value, updated_at: new Date().toISOString() })
-            .eq('key', rowData.key)
-            .select();
-          if (!error && data && data.length > 0) return data[0];
-        }
-        throw upsertErr;
-      }
-    } else {
-      const { data, error } = await supabaseClient.from(table).insert([rowData]).select();
-      if (error) throw error;
-      return data ? data[0] : rowData;
-    }
+    const { data, error } = await supabaseClient.from(table).insert([rowData]).select();
+    if (error) throw error;
+    return data ? data[0] : rowData;
   } catch (err) {
     console.error('[insertRow error]', table, err);
     throw err;
