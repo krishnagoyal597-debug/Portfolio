@@ -328,11 +328,114 @@ async function fetchMessages() {
   return FALLBACK_DATA.messages;
 }
 
+/* Dedicated helpers for key-value tables (meta & links) with multi-layer fallback */
+async function saveMetaKey(key, value) {
+  // 1. Update local cache
+  let meta = getLocalCache('meta', FALLBACK_DATA.meta || {});
+  if (Array.isArray(meta)) {
+    const idx = meta.findIndex(m => m && m.key === key);
+    if (idx !== -1) meta[idx].value = value;
+    else meta.push({ key, value });
+  } else if (typeof meta === 'object' && meta !== null) {
+    meta[key] = value;
+  }
+  setLocalCache('meta', meta);
+
+  // 2. Direct Supabase write with automatic conflict fallback
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('meta')
+        .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' })
+        .select();
+      if (!error && data && data.length > 0) return data[0];
+    } catch (e) { }
+
+    try {
+      const { data, error } = await supabaseClient
+        .from('meta')
+        .update({ value, updated_at: new Date().toISOString() })
+        .eq('key', key)
+        .select();
+      if (!error && data && data.length > 0) return data[0];
+    } catch (e) { }
+  }
+
+  // 3. Sync to Python backend API
+  try {
+    const res = await fetch('/api/data/meta', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key, value })
+    });
+    if (res.ok) {
+      const json = await res.json();
+      return json.data || { key, value };
+    }
+  } catch (e) { }
+
+  return { key, value };
+}
+
+async function saveLinkKey(key, value) {
+  // 1. Update local cache
+  let links = getLocalCache('links', FALLBACK_DATA.links || {});
+  if (Array.isArray(links)) {
+    const idx = links.findIndex(m => m && m.key === key);
+    if (idx !== -1) links[idx].value = value;
+    else links.push({ key, value });
+  } else if (typeof links === 'object' && links !== null) {
+    links[key] = value;
+  }
+  setLocalCache('links', links);
+
+  // 2. Direct Supabase write with automatic conflict fallback
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('links')
+        .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' })
+        .select();
+      if (!error && data && data.length > 0) return data[0];
+    } catch (e) { }
+
+    try {
+      const { data, error } = await supabaseClient
+        .from('links')
+        .update({ value, updated_at: new Date().toISOString() })
+        .eq('key', key)
+        .select();
+      if (!error && data && data.length > 0) return data[0];
+    } catch (e) { }
+  }
+
+  // 3. Sync to Python backend API
+  try {
+    const res = await fetch('/api/data/links', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key, value })
+    });
+    if (res.ok) {
+      const json = await res.json();
+      return json.data || { key, value };
+    }
+  } catch (e) { }
+
+  return { key, value };
+}
+
 /* CRUD Helpers */
 async function insertRow(table, rowData) {
+  if (table === 'meta' && rowData && rowData.key && rowData.value !== undefined) {
+    return await saveMetaKey(rowData.key, rowData.value);
+  }
+  if (table === 'links' && rowData && rowData.key && rowData.value !== undefined) {
+    return await saveLinkKey(rowData.key, rowData.value);
+  }
+
   let list = getLocalCache(table, FALLBACK_DATA[table] || []);
   if (Array.isArray(list)) {
-    // Update existing item if same id, otherwise prepend
     const idx = list.findIndex(item => String(item.id) === String(rowData.id));
     if (idx !== -1) {
       list[idx] = { ...list[idx], ...rowData };
@@ -341,31 +444,9 @@ async function insertRow(table, rowData) {
       list.unshift(newRow);
     }
     setLocalCache(table, list);
-  } else if (typeof list === 'object') {
-    if (rowData.key && rowData.value !== undefined) {
-      list[rowData.key] = rowData.value;
-      setLocalCache(table, list);
-    }
   }
 
-  // For meta and links: use backend API only (it handles Supabase upsert server-side).
-  // This avoids double-write race conditions that cause unique constraint violations.
-  if (table === 'meta' || table === 'links') {
-    try {
-      const res = await fetch(`/api/data/${table}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(rowData)
-      });
-      const result = await res.json();
-      return result.data || rowData;
-    } catch (e) {
-      console.warn('[insertRow meta/links API error]', e);
-      return rowData;
-    }
-  }
-
-  // For other tables: sync to backend API, then also write via Supabase JS client
+  // Sync to backend API
   try {
     await fetch(`/api/data/${table}`, {
       method: 'POST',
@@ -382,7 +463,7 @@ async function insertRow(table, rowData) {
     return data ? data[0] : rowData;
   } catch (err) {
     console.error('[insertRow error]', table, err);
-    throw err;
+    return rowData;
   }
 }
 

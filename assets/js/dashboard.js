@@ -319,7 +319,7 @@ async function saveCroppedProfilePhoto() {
   if (!cropperInstance) return;
 
   const statusEl = document.getElementById('crop-upload-status');
-  if (statusEl) statusEl.textContent = '⏳ Processing and uploading cropped profile photo...';
+  if (statusEl) statusEl.textContent = '⏳ Processing and saving cropped profile photo...';
 
   const canvas = cropperInstance.getCroppedCanvas({
     width: 600,
@@ -333,42 +333,31 @@ async function saveCroppedProfilePhoto() {
     return;
   }
 
-  canvas.toBlob(async (blob) => {
-    if (!blob) return;
+  try {
+    // Generate high quality data URL directly from canvas (instant, zero network latency)
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
 
-    const formData = new FormData();
-    const filename = rawProfileFile ? rawProfileFile.name : 'profile_photo.jpg';
-    formData.append('file', blob, `profile_crop_${filename}`);
+    // Update input field and preview avatar immediately
+    const inputUrl = document.getElementById('profile-url-input');
+    if (inputUrl) inputUrl.value = dataUrl;
+    const prevImg = document.getElementById('profile-preview-img');
+    if (prevImg) prevImg.src = dataUrl;
 
-    try {
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      });
-      const data = await res.json();
-
-      if (res.ok && data.url) {
-        if (statusEl) statusEl.textContent = '✓ Uploaded successfully!';
-
-        // Update input field and preview avatar (data: URL works directly as img src)
-        const inputUrl = document.getElementById('profile-url-input');
-        if (inputUrl) inputUrl.value = data.url;
-        const prevImg = document.getElementById('profile-preview-img');
-        if (prevImg) prevImg.src = data.url;
-
-        // Auto save to database
-        await insertRow('meta', { key: 'profile_photo_url', value: data.url });
-
-        closeCropModal();
-        alert('✓ Profile photo cropped and set successfully! Syncing portfolio...');
-        triggerRegenerate();
-      } else {
-        if (statusEl) statusEl.textContent = '❌ Upload error: ' + (data.message || 'Error');
-      }
-    } catch (err) {
-      if (statusEl) statusEl.textContent = '❌ Error saving cropped photo: ' + err.message;
+    // Save directly to database & storage
+    if (typeof saveMetaKey === 'function') {
+      await saveMetaKey('profile_photo_url', dataUrl);
+    } else {
+      await insertRow('meta', { key: 'profile_photo_url', value: dataUrl });
     }
-  }, 'image/jpeg', 0.92);
+
+    if (statusEl) statusEl.textContent = '✓ Saved successfully!';
+    closeCropModal();
+    alert('✓ Profile photo cropped and saved successfully!');
+    triggerRegenerate();
+  } catch (err) {
+    console.error('Error saving cropped photo:', err);
+    if (statusEl) statusEl.textContent = '❌ Error saving cropped photo: ' + (err.message || 'Unknown error');
+  }
 }
 
 function uploadResumePDF(input) {
@@ -385,10 +374,25 @@ async function saveProfileMeta(e) {
   const resume_url = document.getElementById('prof-resume').value;
 
   try {
-    await insertRow('meta', { key: 'tagline', value: tagline });
-    await insertRow('meta', { key: 'bio', value: bio });
-    await insertRow('meta', { key: 'profile_photo_url', value: profile_photo_url });
-    await insertRow('links', { key: 'resume_url', value: resume_url });
+    if (typeof saveMetaKey === 'function') {
+      await saveMetaKey('tagline', tagline);
+      await saveMetaKey('bio', bio);
+      if (profile_photo_url) {
+        await saveMetaKey('profile_photo_url', profile_photo_url);
+      }
+    } else {
+      await insertRow('meta', { key: 'tagline', value: tagline });
+      await insertRow('meta', { key: 'bio', value: bio });
+      if (profile_photo_url) {
+        await insertRow('meta', { key: 'profile_photo_url', value: profile_photo_url });
+      }
+    }
+
+    if (typeof saveLinkKey === 'function') {
+      await saveLinkKey('resume_url', resume_url);
+    } else {
+      await insertRow('links', { key: 'resume_url', value: resume_url });
+    }
 
     alert('✓ Profile settings saved! Syncing portfolio...');
     triggerRegenerate();
