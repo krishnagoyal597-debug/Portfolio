@@ -149,6 +149,11 @@ def fetch_all_data() -> dict:
         exp_data = supabase.table("experience").select("*").order("start_date", desc=True).execute().data
         ach_data = supabase.table("achievements").select("*").order("date_achieved", desc=True).execute().data
 
+        try:
+            acad_data = supabase.table("academics").select("*").execute().data
+        except Exception:
+            acad_data = []
+
         links_rows = supabase.table("links").select("*").execute().data
         links_dict = {row["key"]: row["value"] for row in links_rows} if links_rows else FALLBACK_DATA["links"]
 
@@ -161,6 +166,7 @@ def fetch_all_data() -> dict:
             "certifications": certs_data if certs_data else FALLBACK_DATA["certifications"],
             "experience": exp_data if exp_data else FALLBACK_DATA["experience"],
             "achievements": ach_data if ach_data else FALLBACK_DATA["achievements"],
+            "academics": acad_data if acad_data else [],
             "links": links_dict,
             "meta": meta_dict,
         }

@@ -110,6 +110,7 @@ def serve_uploaded_file(filename):
 # ─── PUBLIC DYNAMIC ROUTES ───────────────────────────────
 
 @app.route("/")
+@app.route("/index.html")
 def serve_portfolio():
     """Dynamically render the portfolio homepage live on every request"""
     try:
@@ -239,9 +240,15 @@ def add_row(table_name):
     """Insert a new row into a database table"""
     if table_name not in ALLOWED_TABLES:
         return jsonify({"error": f"Table '{table_name}' not allowed"}), 404
-    data = request.get_json() or {}
+
+    try:
+        data = request.get_json(force=True) or {}
+    except Exception as parse_err:
+        print(f"[API POST] JSON parse error for {table_name}: {parse_err}")
+        return jsonify({"status": "error", "message": f"Invalid JSON: {parse_err}"}), 400
 
     if table_name == "meta" and "key" in data and "value" in data:
+        print(f"[API POST meta] key={data['key']}, value_len={len(str(data['value']))}")
         result = upsert_meta(data["key"], data["value"])
     elif table_name == "links" and "key" in data and "value" in data:
         result = upsert_link(data["key"], data["value"])
