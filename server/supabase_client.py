@@ -205,7 +205,10 @@ def insert_row(table_name: str, data: dict) -> dict:
         return {"status": "persisted_locally", "data": data}
 
     try:
-        res = supabase.table(table_name).insert(data).execute()
+        if table_name in ["meta", "links"] and "key" in data:
+            res = supabase.table(table_name).upsert(data, on_conflict="key").execute()
+        else:
+            res = supabase.table(table_name).insert(data).execute()
         return res.data
     except Exception as e:
         print(f"[Supabase Insert Error] {e}")
@@ -264,7 +267,7 @@ def upsert_meta(key: str, value: str) -> dict:
         return {"key": key, "value": value}
 
     try:
-        res = supabase.table("meta").upsert({"key": key, "value": value}).execute()
+        res = supabase.table("meta").upsert({"key": key, "value": value}, on_conflict="key").execute()
         return res.data
     except Exception as e:
         print(f"[Supabase Upsert Meta Error] {e}")
@@ -280,7 +283,7 @@ def upsert_link(key: str, value: str) -> dict:
         return {"key": key, "value": value}
 
     try:
-        res = supabase.table("links").upsert({"key": key, "value": value}).execute()
+        res = supabase.table("links").upsert({"key": key, "value": value}, on_conflict="key").execute()
         return res.data
     except Exception as e:
         print(f"[Supabase Upsert Link Error] {e}")

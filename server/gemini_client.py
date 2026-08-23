@@ -12,7 +12,7 @@ model = None
 if GEMINI_API_KEY and not GEMINI_API_KEY.startswith("your_google"):
     try:
         genai.configure(api_key=GEMINI_API_KEY)
-        for m in ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-lite", "gemini-1.0-pro"]:
+        for m in ["gemini-3.6-flash", "gemini-3.7-flash", "gemini-flash-latest", "gemini-2.5-flash"]:
             try:
                 model = genai.GenerativeModel(m)
                 break
