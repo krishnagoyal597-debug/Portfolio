@@ -345,13 +345,16 @@
             <div class="academic-header">
               <div>
                 <h3 class="academic-title">{{ acad.semester }}</h3>
-                <div class="academic-program">{{ acad.degree_program if acad.degree_program else 'B.Tech AI & Data Analytics' }}</div>
+                <div class="academic-program">{{ acad.degree_program if acad.degree_program else 'B.Tech AI & Data
+                  Analytics' }}</div>
               </div>
               {% if acad.session_year %}
-              <span class="mono-chip" style="color: var(--accent); background: var(--accent-light); padding: 4px 10px; border-radius: 6px; font-size: 0.78rem;">{{ acad.session_year }}</span>
+              <span class="mono-chip"
+                style="color: var(--accent); background: var(--accent-light); padding: 4px 10px; border-radius: 6px; font-size: 0.78rem;">{{
+                acad.session_year }}</span>
               {% endif %}
             </div>
-            
+
             <div class="academic-scores">
               <div class="academic-score-chip">{{ acad.sgpa_cgpa }}</div>
               {% if acad.percentage %}
