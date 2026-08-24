@@ -86,28 +86,25 @@ async function loadTabContent(tab) {
   }
 }
 
-/* FILE UPLOAD HELPER */
+/* ====================================================================
+   FILE UPLOAD HELPER (Direct to Supabase Storage Bucket)
+   ==================================================================== */
 async function uploadImageFile(fileInput, statusId, callback) {
   const file = fileInput.files[0];
   if (!file) return;
 
   const statusEl = document.getElementById(statusId);
-  if (statusEl) statusEl.textContent = '⏳ Uploading image/file...';
-
-  const formData = new FormData();
-  formData.append('file', file);
+  if (statusEl) statusEl.textContent = '⏳ Uploading file to Supabase Storage...';
 
   try {
-    const res = await fetch('/api/upload', {
-      method: 'POST',
-      body: formData
-    });
-    const data = await res.json();
-    if (res.ok && data.url) {
-      if (statusEl) statusEl.textContent = '✓ Uploaded successfully!';
-      if (callback) callback(data.url);
+    const res = await uploadToSupabaseStorage(file, file.name);
+    if (res && res.success && res.url) {
+      if (statusEl) {
+        statusEl.textContent = res.source === 'supabase_storage' ? '✓ Uploaded to Supabase Storage!' : '✓ Uploaded successfully!';
+      }
+      if (callback) callback(res.url);
     } else {
-      if (statusEl) statusEl.textContent = '❌ Upload failed: ' + (data.message || 'Error');
+      if (statusEl) statusEl.textContent = '❌ Upload failed: ' + (res.error || 'Unknown error');
     }
   } catch (e) {
     if (statusEl) statusEl.textContent = '❌ Upload error: ' + e.message;
@@ -190,9 +187,18 @@ async function loadProfileTab() {
   const [metaList, linksList] = await Promise.all([fetchMeta(), fetchLinks()]);
 
   const metaMap = {};
-  metaList.forEach(m => metaMap[m.key] = m.value);
+  if (Array.isArray(metaList)) {
+    metaList.forEach(m => { if (m && m.key) metaMap[m.key] = m.value; });
+  } else if (typeof metaList === 'object') {
+    Object.assign(metaMap, metaList);
+  }
+
   const linkMap = {};
-  linksList.forEach(l => linkMap[l.key] = l.value);
+  if (Array.isArray(linksList)) {
+    linksList.forEach(l => { if (l && l.key) linkMap[l.key] = l.value; });
+  } else if (typeof linksList === 'object') {
+    Object.assign(linkMap, linksList);
+  }
 
   const profilePhoto = metaMap.profile_photo_url || 'assets/images/profile.svg';
   const tagline = metaMap.tagline || 'B.Tech AI & Data Analytics Student @ GLA University';
@@ -200,76 +206,67 @@ async function loadProfileTab() {
   const resumeUrl = linkMap.resume_url || '#';
 
   mainContent.innerHTML = `
-    <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 20px;">Profile Photo, Bio & Resume Settings</h2>
-
-    <div style="display: grid; grid-template-columns: 280px 1fr; gap: 32px; align-items: start;">
-      
-      <!-- PROFILE PHOTO CARD -->
-      <div class="table-card" style="padding: 24px; text-align: center;">
-        <div style="font-weight: 700; margin-bottom: 16px;">Profile Photo</div>
-        <div style="width: 140px; height: 140px; border-radius: 50%; overflow: hidden; margin: 0 auto 16px auto; border: 3px solid var(--admin-primary);">
-          <img id="profile-preview-img" src="${profilePhoto}" style="width: 100%; height: 100%; object-fit: cover;">
+    <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 20px;">Profile Identity & Core Biography</h2>
+    
+    <div class="profile-meta-card">
+      <div class="avatar-manager">
+        <img src="${profilePhoto}" alt="Avatar Preview" class="profile-preview-avatar" id="profile-preview-img">
+        <div class="avatar-controls">
+          <label style="font-weight: 600; font-size: 0.88rem; color: var(--admin-text-main); margin-bottom: 4px; display: block;">
+            Profile Photo
+          </label>
+          <p style="font-size: 0.8rem; color: var(--admin-text-muted); margin-bottom: 12px;">
+            Upload your picture. A crop & zoom tool opens to adjust the fit.
+          </p>
+          <input type="file" id="profile-crop-file-input" accept="image/*" style="display: none;" onchange="handleProfilePhotoSelected(this)">
+          <button type="button" class="btn btn-primary" onclick="document.getElementById('profile-crop-file-input').click()" style="font-size: 0.85rem;">
+            📷 Choose Photo & Crop...
+          </button>
         </div>
+      </div>
 
-        <div class="form-group" style="text-align: left; margin-bottom: 12px;">
-          <label style="font-size: 0.8rem;">Upload Image File:</label>
-          <input type="file" id="profile-file-input" class="form-control" onchange="uploadProfilePhoto(this)">
-        </div>
-
-        <div class="form-group" style="text-align: left;">
-          <label style="font-size: 0.8rem;">Image URL:</label>
+      <form onsubmit="saveProfileMeta(event)">
+        <div class="form-group">
+          <label>Profile Photo URL</label>
           <input type="text" id="profile-url-input" class="form-control" value="${profilePhoto}">
         </div>
-
-        <div id="profile-upload-status" style="font-size: 0.8rem; color: var(--admin-primary); margin-top: 8px;"></div>
-      </div>
-
-      <!-- BIO & METADATA FORM -->
-      <div class="table-card" style="padding: 28px;">
-        <form onsubmit="saveProfileMeta(event)">
-          <div class="form-group">
-            <label for="prof-tagline">Headline / Tagline</label>
-            <input type="text" id="prof-tagline" class="form-control" value="${tagline}" required>
+        <div class="form-group">
+          <label>Hero Headline Tagline</label>
+          <input type="text" id="prof-tagline" class="form-control" value="${tagline}" required>
+        </div>
+        <div class="form-group">
+          <label>About Me / Bio</label>
+          <textarea id="prof-bio" class="form-control" rows="4" required>${bio}</textarea>
+        </div>
+        <div class="form-group">
+          <label>Resume PDF / Drive Link</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="prof-resume" class="form-control" value="${resumeUrl}">
+            <label class="btn btn-secondary" style="cursor: pointer; white-space: nowrap; margin: 0;">
+              📄 Upload PDF
+              <input type="file" accept=".pdf" style="display: none;" onchange="uploadResumePDF(this)">
+            </label>
           </div>
-
-          <div class="form-group">
-            <label for="prof-bio">About Me (Bio Paragraph)</label>
-            <textarea id="prof-bio" class="form-control" rows="5" required>${bio}</textarea>
-          </div>
-
-          <div class="form-group">
-            <label for="prof-resume">Resume PDF Link or File Upload</label>
-            <div style="display: flex; gap: 12px;">
-              <input type="text" id="prof-resume" class="form-control" value="${resumeUrl}">
-              <input type="file" class="form-control" style="width: 220px;" onchange="uploadResumePDF(this)">
-            </div>
-            <div id="resume-upload-status" style="font-size: 0.8rem; color: var(--admin-primary); margin-top: 4px;"></div>
-          </div>
-
-          <button type="submit" class="btn btn-primary" style="margin-top: 16px;">Save Profile Settings →</button>
-        </form>
-      </div>
-
+          <div id="resume-upload-status" style="font-size: 0.8rem; color: var(--admin-primary); margin-top: 4px;"></div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Save Profile Settings →</button>
+      </form>
     </div>
   `;
 }
 
-/* PROFILE PHOTO CROPPER & ADJUSTMENT CONTROLS */
+/* PROFILE PHOTO CROPPER FLOW */
 let cropperInstance = null;
-let rawProfileFile = null;
 
-function uploadProfilePhoto(input) {
+function handleProfilePhotoSelected(input) {
   const file = input.files[0];
   if (!file) return;
 
-  rawProfileFile = file;
   const reader = new FileReader();
-  reader.onload = function(e) {
-    const cropImgTarget = document.getElementById('crop-image-target');
-    if (!cropImgTarget) return;
-
-    cropImgTarget.src = e.target.result;
+  reader.onload = (e) => {
     openAdminModal('modal-crop-overlay');
+    const cropImgTarget = document.getElementById('crop-image-target');
+    cropImgTarget.src = e.target.result;
 
     if (cropperInstance) {
       cropperInstance.destroy();
@@ -319,7 +316,7 @@ async function saveCroppedProfilePhoto() {
   if (!cropperInstance) return;
 
   const statusEl = document.getElementById('crop-upload-status');
-  if (statusEl) statusEl.textContent = '⏳ Processing and saving cropped profile photo...';
+  if (statusEl) statusEl.textContent = '⏳ Processing and uploading photo to Supabase Storage...';
 
   const canvas = cropperInstance.getCroppedCanvas({
     width: 600,
@@ -334,25 +331,26 @@ async function saveCroppedProfilePhoto() {
   }
 
   try {
-    // Generate high quality data URL directly from canvas (instant, zero network latency)
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+    // 1. Convert Canvas to JPEG Blob
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.90));
+    const filename = `profile_crop_${Date.now()}.jpg`;
 
-    // Update input field and preview avatar immediately
+    // 2. Upload to Supabase Storage Bucket
+    const uploadRes = await uploadToSupabaseStorage(blob, filename);
+    const finalUrl = (uploadRes && uploadRes.url) ? uploadRes.url : canvas.toDataURL('image/jpeg', 0.88);
+
+    // 3. Update input field and preview avatar immediately
     const inputUrl = document.getElementById('profile-url-input');
-    if (inputUrl) inputUrl.value = dataUrl;
+    if (inputUrl) inputUrl.value = finalUrl;
     const prevImg = document.getElementById('profile-preview-img');
-    if (prevImg) prevImg.src = dataUrl;
+    if (prevImg) prevImg.src = finalUrl;
 
-    // Save directly to database & storage
-    if (typeof saveMetaKey === 'function') {
-      await saveMetaKey('profile_photo_url', dataUrl);
-    } else {
-      await insertRow('meta', { key: 'profile_photo_url', value: dataUrl });
-    }
+    // 4. Save directly to Supabase meta table
+    await saveMetaKey('profile_photo_url', finalUrl);
 
     if (statusEl) statusEl.textContent = '✓ Saved successfully!';
     closeCropModal();
-    alert('✓ Profile photo cropped and saved successfully!');
+    alert('✓ Profile photo cropped and uploaded to Supabase Storage!');
     triggerRegenerate();
   } catch (err) {
     console.error('Error saving cropped photo:', err);
@@ -374,24 +372,13 @@ async function saveProfileMeta(e) {
   const resume_url = document.getElementById('prof-resume').value;
 
   try {
-    if (typeof saveMetaKey === 'function') {
-      await saveMetaKey('tagline', tagline);
-      await saveMetaKey('bio', bio);
-      if (profile_photo_url) {
-        await saveMetaKey('profile_photo_url', profile_photo_url);
-      }
-    } else {
-      await insertRow('meta', { key: 'tagline', value: tagline });
-      await insertRow('meta', { key: 'bio', value: bio });
-      if (profile_photo_url) {
-        await insertRow('meta', { key: 'profile_photo_url', value: profile_photo_url });
-      }
+    await saveMetaKey('tagline', tagline);
+    await saveMetaKey('bio', bio);
+    if (profile_photo_url) {
+      await saveMetaKey('profile_photo_url', profile_photo_url);
     }
-
-    if (typeof saveLinkKey === 'function') {
+    if (resume_url) {
       await saveLinkKey('resume_url', resume_url);
-    } else {
-      await insertRow('links', { key: 'resume_url', value: resume_url });
     }
 
     alert('✓ Profile settings saved! Syncing portfolio...');
@@ -598,12 +585,33 @@ async function loadExperienceTab() {
   `;
 }
 
-/* 8. LINKS & META TAB */
+/* 8. LINKS & META TAB + STORAGE BUCKET CONFIG */
 async function loadLinksMetaTab() {
   const mainContent = document.getElementById('admin-tab-content');
   const [links, meta] = await Promise.all([fetchLinks(), fetchMeta()]);
 
+  const currentBucket = getSupabaseBucketName();
+
   mainContent.innerHTML = `
+    <!-- Storage Bucket Configuration Card -->
+    <div class="table-card" style="margin-bottom: 28px; padding: 22px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--admin-text-main);">
+          🪣 Supabase Storage Bucket Configuration
+        </h3>
+        <span class="mono-chip" style="color: var(--admin-primary); background: rgba(37,99,235,0.08); font-weight: 700;">Active: ${currentBucket}</span>
+      </div>
+      <p style="font-size: 0.85rem; color: var(--admin-text-muted); margin-bottom: 16px;">
+        Uploaded photos, marksheets, and PDFs will be saved directly to this Supabase Storage bucket. Ensure this bucket is created in your Supabase Dashboard under <strong>Storage &gt; Buckets</strong> with <strong>Public Bucket</strong> enabled.
+      </p>
+      <div style="display: flex; gap: 10px; align-items: center; max-width: 520px;">
+        <input type="text" id="setting-supabase-bucket" class="form-control" value="${currentBucket}" placeholder="e.g. portfolio">
+        <button class="btn btn-primary" onclick="updateStorageBucketSetting()" style="white-space: nowrap;">✓ Save Bucket Name</button>
+      </div>
+      <div id="bucket-setting-status" style="font-size: 0.8rem; color: var(--admin-primary); margin-top: 8px;"></div>
+    </div>
+
+    <!-- Links Section -->
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
       <h2 style="font-size: 1.25rem; font-weight: 700;">Links & Social Handles</h2>
       <button class="btn btn-primary" onclick="openAddLinkModal()">+ Add/Update Link</button>
@@ -621,9 +629,9 @@ async function loadLinksMetaTab() {
           ${links.map(l => `
             <tr>
               <td><strong>${l.key}</strong></td>
-              <td>${l.value}</td>
+              <td style="max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${l.value}</td>
               <td>
-                <button class="btn-sm-action btn-edit-sm" onclick="editLinkValue('${l.key}', '${l.value}')">Edit</button>
+                <button class="btn-sm-action btn-edit-sm" onclick="handleEditLink('${l.key}')">Edit</button>
               </td>
             </tr>
           `).join('')}
@@ -631,6 +639,7 @@ async function loadLinksMetaTab() {
       </table>
     </div>
 
+    <!-- Meta Section -->
     <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 16px;">Headline & Bio Settings</h2>
     <div class="table-card">
       <table class="admin-table">
@@ -645,9 +654,11 @@ async function loadLinksMetaTab() {
           ${meta.map(m => `
             <tr>
               <td><strong>${m.key}</strong></td>
-              <td>${m.value}</td>
+              <td style="max-width: 380px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                ${m.value && m.value.startsWith('data:image') ? `<span class="mono-chip" style="font-size: 0.75rem;">[Base64 Image Data - ${m.value.length} chars]</span>` : (m.value || '—')}
+              </td>
               <td>
-                <button class="btn-sm-action btn-edit-sm" onclick="editMetaValue('${m.key}', '${m.value.replace(/'/g, "\\'")}')">Edit</button>
+                <button class="btn-sm-action btn-edit-sm" onclick="handleEditMeta('${m.key}')">Edit</button>
               </td>
             </tr>
           `).join('')}
@@ -656,6 +667,56 @@ async function loadLinksMetaTab() {
     </div>
   `;
 }
+
+function updateStorageBucketSetting() {
+  const input = document.getElementById('setting-supabase-bucket');
+  const statusEl = document.getElementById('bucket-setting-status');
+  if (!input) return;
+
+  const bucketName = input.value.trim();
+  if (!bucketName) {
+    alert('Please enter a valid bucket name.');
+    return;
+  }
+
+  setSupabaseBucketName(bucketName);
+  if (statusEl) statusEl.textContent = `✓ Bucket updated to "${bucketName}"! All future uploads will use this bucket.`;
+  alert(`✓ Supabase Storage Bucket updated to: ${bucketName}`);
+}
+
+window.handleEditLink = function(key) {
+  fetchLinks().then(links => {
+    let currentVal = '';
+    if (Array.isArray(links)) {
+      const item = links.find(l => l && l.key === key);
+      if (item) currentVal = item.value;
+    }
+    const newVal = prompt(`Enter new URL for ${key}:`, currentVal);
+    if (newVal === null || newVal === currentVal) return;
+    saveLinkKey(key, newVal).then(() => {
+      alert('✓ Link updated!');
+      loadLinksMetaTab();
+      triggerRegenerate();
+    });
+  });
+};
+
+window.handleEditMeta = function(key) {
+  fetchMeta().then(meta => {
+    let currentVal = '';
+    if (Array.isArray(meta)) {
+      const item = meta.find(m => m && m.key === key);
+      if (item) currentVal = item.value;
+    }
+    const newVal = prompt(`Enter new text for ${key}:`, currentVal);
+    if (newVal === null || newVal === currentVal) return;
+    saveMetaKey(key, newVal).then(() => {
+      alert('✓ Meta updated!');
+      loadLinksMetaTab();
+      triggerRegenerate();
+    });
+  });
+};
 
 /* 9. MESSAGES TAB */
 async function loadMessagesTab() {
@@ -696,7 +757,6 @@ async function loadMessagesTab() {
 }
 
 /* MODALS & ADD ACTION HANDLERS WITH COMPUTER FILE SELECTION */
-
 function openAdminModal(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) modal.classList.add('active');
@@ -746,13 +806,13 @@ async function submitProjectForm(e) {
   e.preventDefault();
   const title = document.getElementById('proj-title').value;
   const description = document.getElementById('proj-desc').value;
-  const techStr = document.getElementById('proj-stack').value;
-  const github_url = document.getElementById('proj-github').value || 'https://github.com/krishnagoyal597';
-  const live_url = document.getElementById('proj-demo').value || 'https://demo.example.com';
+  const stackStr = document.getElementById('proj-stack').value;
+  const github_url = document.getElementById('proj-github').value;
+  const live_url = document.getElementById('proj-demo').value;
   const image_url = document.getElementById('proj-img-url').value || '';
   const featured = document.getElementById('proj-featured').checked;
 
-  const tech_stack = techStr ? techStr.split(',').map(t => t.trim()) : ['Python'];
+  const tech_stack = stackStr.split(',').map(s => s.trim()).filter(Boolean);
 
   try {
     await insertRow('projects', {
@@ -761,9 +821,8 @@ async function submitProjectForm(e) {
       tech_stack,
       github_url,
       live_url,
-      image_url,
-      featured,
-      created_at: new Date().toISOString()
+      image_url: image_url || null,
+      featured
     });
     alert('✓ Project added successfully! Syncing portfolio...');
     closeAdminModal('modal-project-overlay');
@@ -785,11 +844,17 @@ async function submitAchievementForm(e) {
   const title = document.getElementById('ach-title').value;
   const category = document.getElementById('ach-category').value;
   const date_achieved = document.getElementById('ach-date').value;
-  const description = document.getElementById('ach-desc').value || '';
+  const description = document.getElementById('ach-desc').value;
   const image_url = document.getElementById('ach-img-url').value || 'assets/images/cert-ml.svg';
 
   try {
-    await insertRow('achievements', { title, category, date_achieved, description, image_url });
+    await insertRow('achievements', {
+      title,
+      category,
+      date_achieved,
+      description,
+      image_url
+    });
     alert('✓ Achievement added successfully! Syncing portfolio...');
     closeAdminModal('modal-achievement-overlay');
     loadAchievementsTab();
@@ -809,7 +874,11 @@ async function submitSkillForm(e) {
   const category = document.getElementById('skill-category').value;
 
   try {
-    await insertRow('skills', { name, category, proficiency: 90 });
+    await insertRow('skills', {
+      name,
+      category,
+      proficiency: 85
+    });
     alert('✓ Skill added successfully! Syncing portfolio...');
     closeAdminModal('modal-skill-overlay');
     loadSkillsTab();
@@ -858,40 +927,12 @@ async function openAddLinkModal() {
   if (!value) return;
 
   try {
-    await insertRow('links', { key, value });
+    await saveLinkKey(key, value);
     alert('✓ Link updated successfully! Syncing portfolio...');
     loadLinksMetaTab();
     triggerRegenerate();
   } catch (e) {
     alert('Failed to update link: ' + e.message);
-  }
-}
-
-async function editLinkValue(key, currentVal) {
-  const newVal = prompt(`Enter new URL for ${key}:`, currentVal);
-  if (!newVal || newVal === currentVal) return;
-
-  try {
-    await insertRow('links', { key, value: newVal });
-    alert('✓ Link updated! Syncing portfolio...');
-    loadLinksMetaTab();
-    triggerRegenerate();
-  } catch (e) {
-    alert('Update failed: ' + e.message);
-  }
-}
-
-async function editMetaValue(key, currentVal) {
-  const newVal = prompt(`Enter new text for ${key}:`, currentVal);
-  if (!newVal || newVal === currentVal) return;
-
-  try {
-    await insertRow('meta', { key, value: newVal });
-    alert('✓ Meta updated! Syncing portfolio...');
-    loadLinksMetaTab();
-    triggerRegenerate();
-  } catch (e) {
-    alert('Update failed: ' + e.message);
   }
 }
 

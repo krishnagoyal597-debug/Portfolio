@@ -19,7 +19,8 @@ from supabase_client import (
     update_row,
     delete_row,
     upsert_meta,
-    upsert_link
+    upsert_link,
+    upload_file_to_storage
 )
 from gemini_client import generate_portfolio_content
 from generate_portfolio import generate
@@ -55,9 +56,8 @@ ALLOWED_TABLES = ["projects", "skills", "certifications", "experience", "achieve
 @app.route("/api/upload", methods=["POST"])
 def upload_file():
     """
-    Upload handler for Vercel serverless.
-    Converts file to a Base64 data URL — no filesystem or storage bucket needed.
-    The data URL is stored directly in Supabase meta/DB and works everywhere.
+    Unified File Upload API with Supabase Storage Bucket integration + Base64 Fallback.
+    Uploads directly to Supabase Storage bucket if accessible, otherwise falls back gracefully.
     """
     try:
         if "file" not in request.files:
@@ -66,26 +66,36 @@ def upload_file():
         if file.filename == "":
             return jsonify({"status": "error", "message": "No selected file"}), 400
 
-        # Read file bytes into memory — no disk write needed
         file_bytes = file.read()
-        content_type = file.content_type or "image/jpeg"
+        content_type = file.content_type or ("application/pdf" if file.filename.endswith(".pdf") else "image/jpeg")
+        bucket_name = request.form.get("bucket") or os.getenv("SUPABASE_STORAGE_BUCKET", "portfolio")
 
-        # Limit: 5MB max to keep DB rows reasonable
-        max_bytes = 5 * 1024 * 1024
-        if len(file_bytes) > max_bytes:
-            return jsonify({"status": "error", "message": "File too large. Maximum size is 5MB."}), 400
+        raw_name = file.filename or "upload.jpg"
+        safe_name = "".join(c if c.isalnum() or c in "._-" else "_" for c in raw_name)
 
-        # Convert to Base64 data URL — works in any <img src="...">
+        # 1. Attempt Supabase Storage Upload
+        storage_res = upload_file_to_storage(file_bytes, safe_name, content_type, bucket_name)
+        if storage_res.get("status") == "success" and storage_res.get("url"):
+            return jsonify({
+                "status": "success",
+                "url": storage_res["url"],
+                "filename": storage_res["filename"],
+                "bucket": storage_res["bucket"],
+                "source": "supabase_storage"
+            })
+
+        # 2. Fallback: Convert to Base64 data URL so upload is NEVER lost
         import base64
         b64 = base64.b64encode(file_bytes).decode("utf-8")
         data_url = f"data:{content_type};base64,{b64}"
-
-        # Sanitize filename for metadata
-        raw_name = file.filename or "upload.jpg"
-        safe_name = "".join(c if c.isalnum() or c in "._-" else "_" for c in raw_name)
         filename = f"upload_{int(time.time())}_{safe_name}"
 
-        return jsonify({"status": "success", "url": data_url, "filename": filename})
+        return jsonify({
+            "status": "success",
+            "url": data_url,
+            "filename": filename,
+            "source": "base64_fallback"
+        })
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500

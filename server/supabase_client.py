@@ -1,5 +1,6 @@
 import os
 import json
+import time
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
@@ -7,6 +8,7 @@ load_dotenv()
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
+SUPABASE_STORAGE_BUCKET = os.getenv("SUPABASE_STORAGE_BUCKET", "portfolio")
 
 supabase: Client = None
 
@@ -98,6 +100,18 @@ FALLBACK_DATA = {
             "image_url": "assets/images/cert-python.svg"
         }
     ],
+    "academics": [
+        {
+            "id": "acad-1",
+            "semester": "Semester 1 (Fall 2025)",
+            "degree_program": "B.Tech AI & Data Analytics",
+            "sgpa_cgpa": "9.20 SGPA",
+            "percentage": "87.5%",
+            "session_year": "2025-2026",
+            "subjects": "Python Programming, Linear Algebra, Discrete Mathematics, Digital Systems",
+            "marksheet_url": ""
+        }
+    ],
     "links": {
         "github": "https://github.com/krishnagoyal597",
         "linkedin": "https://linkedin.com/in/krishnagoyal",
@@ -137,6 +151,34 @@ def save_local_db():
 load_local_db()
 
 
+def upload_file_to_storage(file_bytes: bytes, filename: str, content_type: str = "image/jpeg", bucket_name: str = None) -> dict:
+    """Upload a file to Supabase Storage and return its public URL"""
+    bucket = bucket_name or os.getenv("SUPABASE_STORAGE_BUCKET", "portfolio")
+    clean_name = "".join(c if c.isalnum() or c in "._-" else "_" for c in filename)
+    file_path = f"uploads/{int(time.time())}_{clean_name}"
+
+    if not supabase:
+        return {"status": "error", "message": "Supabase client not connected"}
+
+    try:
+        supabase.storage.from_(bucket).upload(
+            file_path,
+            file_bytes,
+            {"content-type": content_type, "upsert": "true"}
+        )
+        public_url = supabase.storage.from_(bucket).get_public_url(file_path)
+        return {
+            "status": "success",
+            "url": public_url,
+            "filename": file_path,
+            "bucket": bucket,
+            "source": "supabase_storage"
+        }
+    except Exception as e:
+        print(f"[Supabase Storage Upload Warning] Bucket: {bucket}, Error: {e}")
+        return {"status": "error", "message": str(e), "bucket": bucket}
+
+
 def fetch_all_data() -> dict:
     """Fetch all tables and return as a single dictionary"""
     if not supabase:
@@ -150,9 +192,9 @@ def fetch_all_data() -> dict:
         ach_data = supabase.table("achievements").select("*").order("date_achieved", desc=True).execute().data
 
         try:
-            acad_data = supabase.table("academics").select("*").execute().data
+            acad_data = supabase.table("academics").select("*").order("created_at", desc=True).execute().data
         except Exception:
-            acad_data = []
+            acad_data = FALLBACK_DATA.get("academics", [])
 
         links_rows = supabase.table("links").select("*").execute().data
         links_dict = {row["key"]: row["value"] for row in links_rows} if links_rows else FALLBACK_DATA["links"]
@@ -166,7 +208,7 @@ def fetch_all_data() -> dict:
             "certifications": certs_data if certs_data else FALLBACK_DATA["certifications"],
             "experience": exp_data if exp_data else FALLBACK_DATA["experience"],
             "achievements": ach_data if ach_data else FALLBACK_DATA["achievements"],
-            "academics": acad_data if acad_data else [],
+            "academics": acad_data if acad_data else FALLBACK_DATA.get("academics", []),
             "links": links_dict,
             "meta": meta_dict,
         }
@@ -266,14 +308,15 @@ def delete_row(table_name: str, row_id: str) -> dict:
 
 def upsert_meta(key: str, value: str) -> dict:
     """Upsert key/value into meta table and persist to DB"""
-    FALLBACK_DATA["meta"][key] = value
+    if "meta" in FALLBACK_DATA and isinstance(FALLBACK_DATA["meta"], dict):
+        FALLBACK_DATA["meta"][key] = value
     save_local_db()
 
     if not supabase:
         return {"key": key, "value": value}
 
     try:
-        res = supabase.table("meta").upsert({"key": key, "value": value}, on_conflict="key").execute()
+        res = supabase.table("meta").upsert({"key": key, "value": value, "updated_at": "now()"}, on_conflict="key").execute()
         return res.data
     except Exception as e:
         print(f"[Supabase Upsert Meta Error] {e}")
@@ -282,14 +325,15 @@ def upsert_meta(key: str, value: str) -> dict:
 
 def upsert_link(key: str, value: str) -> dict:
     """Upsert key/value into links table and persist to DB"""
-    FALLBACK_DATA["links"][key] = value
+    if "links" in FALLBACK_DATA and isinstance(FALLBACK_DATA["links"], dict):
+        FALLBACK_DATA["links"][key] = value
     save_local_db()
 
     if not supabase:
         return {"key": key, "value": value}
 
     try:
-        res = supabase.table("links").upsert({"key": key, "value": value}, on_conflict="key").execute()
+        res = supabase.table("links").upsert({"key": key, "value": value, "updated_at": "now()"}, on_conflict="key").execute()
         return res.data
     except Exception as e:
         print(f"[Supabase Upsert Link Error] {e}")

@@ -5,6 +5,24 @@
 const SUPABASE_URL = 'https://tqgbxuyzbcrekeshxino.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxZ2J4dXl6YmNyZWtlc2h4aW5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYyMDU2NjgsImV4cCI6MjEwMTc4MTY2OH0.GlbzHcAbGhlGnswHZvl1UyMKIfE8bTdUsoOt7XNlM00';
 
+// Default Supabase Storage Bucket Name (can be configured in Admin Dashboard or localStorage)
+function getSupabaseBucketName() {
+  try {
+    const saved = localStorage.getItem('portfolio_supabase_bucket');
+    if (saved && saved.trim()) return saved.trim();
+  } catch (e) { }
+  return window.SUPABASE_STORAGE_BUCKET || 'portfolio';
+}
+
+function setSupabaseBucketName(name) {
+  try {
+    if (name && name.trim()) {
+      localStorage.setItem('portfolio_supabase_bucket', name.trim());
+      window.SUPABASE_STORAGE_BUCKET = name.trim();
+    }
+  } catch (e) { }
+}
+
 let supabaseClient = null;
 
 if (typeof supabase !== 'undefined' && SUPABASE_URL && !SUPABASE_URL.includes('your-project')) {
@@ -117,6 +135,18 @@ const FALLBACK_DATA = {
       date_achieved: '2025-12-01',
       description: 'Recognized for top percentile performance in AI & Data Analytics coursework.',
       image_url: 'assets/images/cert-python.svg'
+    }
+  ],
+  academics: [
+    {
+      id: 'acad-1',
+      semester: 'Semester 1 (Fall 2025)',
+      degree_program: 'B.Tech AI & Data Analytics',
+      sgpa_cgpa: '9.20 SGPA',
+      percentage: '87.5%',
+      session_year: '2025-2026',
+      subjects: 'Python Programming, Linear Algebra, Discrete Mathematics, Digital Systems',
+      marksheet_url: ''
     }
   ],
   links: [
@@ -265,6 +295,29 @@ async function fetchAchievements() {
   return getLocalCache('achievements', FALLBACK_DATA.achievements);
 }
 
+async function fetchAcademics() {
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient.from('academics').select('*').order('created_at', { ascending: false });
+      if (!error && data && data.length > 0) {
+        setLocalCache('academics', data);
+        return data;
+      }
+    } catch (e) { }
+  }
+  try {
+    const res = await fetch('/api/data/academics');
+    if (res.ok) {
+      const json = await res.json();
+      if (json.data && json.data.length > 0) {
+        setLocalCache('academics', json.data);
+        return json.data;
+      }
+    }
+  } catch (e) { }
+  return getLocalCache('academics', FALLBACK_DATA.academics);
+}
+
 async function fetchLinks() {
   if (supabaseClient) {
     try {
@@ -328,10 +381,80 @@ async function fetchMessages() {
   return FALLBACK_DATA.messages;
 }
 
+/* ====================================================================
+   SUPABASE STORAGE UPLOAD HELPER
+   ==================================================================== */
+async function uploadToSupabaseStorage(fileOrBlob, filename, bucketName = null) {
+  const bucket = bucketName || getSupabaseBucketName();
+  const cleanName = filename || (fileOrBlob.name ? fileOrBlob.name.replace(/[^a-zA-Z0-9._-]/g, '_') : `upload_${Date.now()}.jpg`);
+  const filePath = `uploads/${Date.now()}_${cleanName}`;
+  const contentType = fileOrBlob.type || (cleanName.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg');
+
+  // 1. Try direct Supabase JS Storage Client Upload
+  if (supabaseClient && supabaseClient.storage) {
+    try {
+      const { data, error } = await supabaseClient.storage
+        .from(bucket)
+        .upload(filePath, fileOrBlob, {
+          cacheControl: '3600',
+          upsert: true,
+          contentType: contentType
+        });
+
+      if (!error && data) {
+        const { data: urlData } = supabaseClient.storage.from(bucket).getPublicUrl(filePath);
+        if (urlData && urlData.publicUrl) {
+          console.log('✓ [Supabase Storage Direct] Uploaded to:', urlData.publicUrl);
+          return { success: true, url: urlData.publicUrl, filename: filePath, source: 'supabase_storage' };
+        }
+      } else if (error) {
+        console.warn('[Supabase Storage Direct Warning]', error.message);
+      }
+    } catch (err) {
+      console.warn('[Supabase Storage Direct Catch]', err);
+    }
+  }
+
+  // 2. Try backend API upload (/api/upload) which also uploads to Supabase Storage via Python Client
+  try {
+    const formData = new FormData();
+    formData.append('file', fileOrBlob, cleanName);
+    formData.append('bucket', bucket);
+
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData
+    });
+
+    if (res.ok) {
+      const json = await res.json();
+      if (json.url) {
+        console.log('✓ [Backend API Upload] Uploaded:', json.url);
+        return { success: true, url: json.url, filename: json.filename || cleanName, source: json.source || 'api_upload' };
+      }
+    }
+  } catch (err) {
+    console.warn('[Backend API Upload Catch]', err);
+  }
+
+  // 3. Fallback: Convert to Base64 data URL so nothing ever fails or blocks the user
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      console.log('ℹ [Storage Base64 Fallback] Generated data URL');
+      resolve({ success: true, url: reader.result, filename: cleanName, source: 'base64_fallback' });
+    };
+    reader.onerror = () => {
+      resolve({ success: false, url: '', error: 'Failed to read file locally' });
+    };
+    reader.readAsDataURL(fileOrBlob);
+  });
+}
+
 /* Dedicated helpers for key-value tables (meta & links) with multi-layer fallback */
 async function saveMetaKey(key, value) {
-  // 1. Update local cache
-  let meta = getLocalCache('meta', FALLBACK_DATA.meta || {});
+  // 1. Update local cache immediately
+  let meta = getLocalCache('meta', FALLBACK_DATA.meta || []);
   if (Array.isArray(meta)) {
     const idx = meta.findIndex(m => m && m.key === key);
     if (idx !== -1) meta[idx].value = value;
@@ -341,7 +464,7 @@ async function saveMetaKey(key, value) {
   }
   setLocalCache('meta', meta);
 
-  // 2. Direct Supabase write with automatic conflict fallback
+  // 2. Direct Supabase write with automatic conflict resolution
   if (supabaseClient) {
     try {
       const { data, error } = await supabaseClient
@@ -378,8 +501,8 @@ async function saveMetaKey(key, value) {
 }
 
 async function saveLinkKey(key, value) {
-  // 1. Update local cache
-  let links = getLocalCache('links', FALLBACK_DATA.links || {});
+  // 1. Update local cache immediately
+  let links = getLocalCache('links', FALLBACK_DATA.links || []);
   if (Array.isArray(links)) {
     const idx = links.findIndex(m => m && m.key === key);
     if (idx !== -1) links[idx].value = value;
@@ -389,7 +512,7 @@ async function saveLinkKey(key, value) {
   }
   setLocalCache('links', links);
 
-  // 2. Direct Supabase write with automatic conflict fallback
+  // 2. Direct Supabase write with automatic conflict resolution
   if (supabaseClient) {
     try {
       const { data, error } = await supabaseClient
@@ -434,37 +557,49 @@ async function insertRow(table, rowData) {
     return await saveLinkKey(rowData.key, rowData.value);
   }
 
+  // 1. Update local cache
   let list = getLocalCache(table, FALLBACK_DATA[table] || []);
+  let insertedItem = { ...rowData };
+  if (!insertedItem.id) {
+    insertedItem.id = (table.slice(0, 4)) + '-' + Date.now();
+  }
+
   if (Array.isArray(list)) {
-    const idx = list.findIndex(item => String(item.id) === String(rowData.id));
+    const idx = list.findIndex(item => String(item.id) === String(insertedItem.id));
     if (idx !== -1) {
-      list[idx] = { ...list[idx], ...rowData };
+      list[idx] = { ...list[idx], ...insertedItem };
     } else {
-      const newRow = { id: 'item-' + Date.now(), ...rowData };
-      list.unshift(newRow);
+      list.unshift(insertedItem);
     }
     setLocalCache(table, list);
   }
 
-  // Sync to backend API
+  // 2. Direct Supabase write
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient.from(table).insert([rowData]).select();
+      if (!error && data && data.length > 0) {
+        return data[0];
+      }
+    } catch (err) {
+      console.warn(`[Supabase insertRow warn: ${table}]`, err);
+    }
+  }
+
+  // 3. Sync to Python backend API
   try {
-    await fetch(`/api/data/${table}`, {
+    const res = await fetch(`/api/data/${table}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(rowData)
     });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.data) return json.data;
+    }
   } catch (e) { }
 
-  if (!supabaseClient) return rowData;
-
-  try {
-    const { data, error } = await supabaseClient.from(table).insert([rowData]).select();
-    if (error) throw error;
-    return data ? data[0] : rowData;
-  } catch (err) {
-    console.error('[insertRow error]', table, err);
-    return rowData;
-  }
+  return insertedItem;
 }
 
 async function updateRow(table, id, rowData) {
@@ -476,26 +611,27 @@ async function updateRow(table, id, rowData) {
       setLocalCache(table, list);
     }
   }
-  if (!supabaseClient) {
+
+  if (supabaseClient) {
     try {
-      await fetch(`/api/data/${table}/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(rowData)
-      });
+      const { data, error } = await supabaseClient.from(table).update(rowData).eq('id', id).select();
+      if (!error && data && data.length > 0) return data[0];
     } catch (e) { }
-    return rowData;
   }
-  const { data, error } = await supabaseClient.from(table).update(rowData).eq('id', id).select();
-  if (error) throw error;
+
   try {
-    await fetch(`/api/data/${table}/${id}`, {
+    const res = await fetch(`/api/data/${table}/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(rowData)
     });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.data) return json.data;
+    }
   } catch (e) { }
-  return data ? data[0] : rowData;
+
+  return rowData;
 }
 
 async function deleteRow(table, id) {
@@ -504,15 +640,17 @@ async function deleteRow(table, id) {
     list = list.filter(item => String(item.id) !== String(id));
     setLocalCache(table, list);
   }
-  try {
-    await fetch(`/api/data/${table}/${id}`, { method: 'DELETE' });
-  } catch (e) { }
 
   if (supabaseClient) {
     try {
       await supabaseClient.from(table).delete().eq('id', id);
     } catch (e) { }
   }
+
+  try {
+    await fetch(`/api/data/${table}/${id}`, { method: 'DELETE' });
+  } catch (e) { }
+
   return true;
 }
 
