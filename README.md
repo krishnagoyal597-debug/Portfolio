@@ -1,6 +1,6 @@
 # Personal Resume Portfolio Backend
 
-A high-performance, AI-assisted Python Flask backend for **Krishna** (1st Year B.Tech student specializing in Artificial Intelligence & Data Analytics at GLA University).
+A high-performance, AI-assisted Python Flask backend for **Krishna** (2nd Year B.Tech student specializing in Artificial Intelligence & Data Analytics at GLA University).
 
 This backend serves API endpoints consumed by the portfolio frontend (`index.html` and `admin.html`), interacts with a Supabase PostgreSQL database for content management, and leverages the Google Gemini 1.5 Flash API to automatically generate dynamic portfolio copy, summaries, and terminal specs.
 

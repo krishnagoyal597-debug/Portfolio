@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 JWT_SECRET = os.getenv("JWT_SECRET", "fallback_secret_krishna_2029")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "Krishna@0597")
 
 
 def generate_token() -> str:

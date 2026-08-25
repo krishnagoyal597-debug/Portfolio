@@ -329,7 +329,7 @@ function renderResume(metaData, linksData, projects, skills, certs) {
 
     <div class="resume-block">
       <div class="resume-section-title">Education</div>
-      <p><strong>GLA University</strong> — B.Tech in Artificial Intelligence & Data Analytics (1st Year, Expected 2029)</p>
+      <p><strong>GLA University</strong> — B.Tech in Artificial Intelligence & Data Analytics (2nd Year, Expected 2029)</p>
     </div>
 
     <div class="resume-block">
